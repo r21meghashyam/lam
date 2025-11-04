@@ -15,8 +15,24 @@ app.use(express.json());
 
 // Load configuration
 let config;
+const configPath = path.join(require('os').homedir(), '.lam', 'config.json');
 try {
-    config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+    if (!fs.existsSync(configPath)) {
+        // Create default config
+        const defaultConfig = {
+            httpPort: 80,
+            httpsPort: 443,
+            storagePath: path.join(require('os').homedir(), '.lam', 'mappings.json'),
+            certsPath: path.join(require('os').homedir(), '.lam', 'certs'),
+            hostsFile: "/etc/hosts",
+            enableHttps: false,
+            autoUpdateHosts: true,
+            enableWebSocketProxy: false
+        };
+        fs.mkdirSync(path.dirname(configPath), { recursive: true });
+        fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
+    }
+    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 } catch (error) {
     console.error('Error loading config.json:', error);
     process.exit(1);
@@ -26,8 +42,13 @@ try {
 let mappings = { mappings: [] };
 const loadMappings = () => {
     try {
+        if (!fs.existsSync(path.dirname(config.storagePath))) {
+            fs.mkdirSync(path.dirname(config.storagePath), { recursive: true });
+        }
         if (fs.existsSync(config.storagePath)) {
             mappings = JSON.parse(fs.readFileSync(config.storagePath, 'utf8'));
+        } else {
+            mappings = { mappings: [] };
         }
     } catch (error) {
         console.error('Error loading mappings:', error);

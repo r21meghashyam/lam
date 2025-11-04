@@ -13,76 +13,48 @@ A local reverse proxy and domain manager that lets developers map local ports to
 
 ## Quick Start
 
-### One-Command Installation (Recommended)
+### Installation
 
-Install LAM with a single command:
+Install LAM globally:
 
 ```bash
-npx lam-cli
+npm install -g lam-cli@latest
 ```
 
-This will:
-- Download and install LAM to `~/.lam/`
-- Configure system services automatically
-- Set up LAM with proper configuration
+### Running the Server
 
-Then start LAM:
+Start LAM:
 
 ```bash
-sudo ~/.lam/scripts/start-lam.sh
+sudo lam-cli start
 ```
 
 **That's it!** LAM is now running at `http://localhost:80` and you can start using `.local` domains for your development projects.
 
-### Installing
-
-```bash
-npm install -g lam-cli
-lam-cli  # Run LAM installer
-```
-
-Or use directly with npx:
-
-```bash
-npx lam-cli
-```
-
-**Note:** The CLI command is `lam-cli` to avoid conflicts with the system `lam` command.
-
-The CLI will automatically detect the published package and install LAM to `~/.lam/`.
-
-### How LAM Works After Installation
-
-Once LAM is published to npm as `lam-cli`, users can:
+### How LAM Works
 
 1. **Install globally:**
    ```bash
-   npm install -g lam-cli
-   lam-cli  # Run LAM installer
+   npm install -g lam-cli@latest
    ```
 
-2. **Use with npx:**
+2. **Start LAM:**
    ```bash
-   npx lam-cli  # Downloads and runs LAM installer
+   sudo lam-cli start
    ```
 
-3. **Start LAM:**
-   ```bash
-   sudo ~/.lam/scripts/start-lam.sh
-   ```
-
-4. **Access LAM:**
+3. **Access LAM:**
    - Dashboard: `http://localhost:80`
    - API: `http://localhost:80/api/register`
 
-5. **Register apps:**
+4. **Register apps:**
    ```bash
    curl -X POST http://localhost:80/api/register \
      -H "Content-Type: application/json" \
      -d '{"project":"myapp","port":3000}'
    ```
 
-6. **Access apps:**
+5. **Access apps:**
    - `http://myapp.local` → `http://localhost:3000`
 
 ### Option 1: Manual Startup (Development)
@@ -166,7 +138,7 @@ npm run uninstall:service
 Use the web interface or make a POST request:
 
 ```bash
-curl -X POST http://localhost:8080/api/register \
+curl -X POST http://localhost:80/api/register \
   -H "Content-Type: application/json" \
   -d '{"project":"myapp","port":3000}'
 ```
@@ -222,14 +194,14 @@ sudo node scripts/update-hosts.js myapp.local add
 
 ## Configuration
 
-Edit `config.json` to customize:
+Edit `~/.lam/config.json` to customize:
 
 ```json
 {
-  "httpPort": 8080,
-  "httpsPort": 8443,
-  "storagePath": "./storage/mappings.json",
-  "certsPath": "./certs",
+  "httpPort": 80,
+  "httpsPort": 443,
+  "storagePath": "~/.lam/mappings.json",
+  "certsPath": "~/.lam/certs",
   "hostsFile": "/etc/hosts",
   "enableHttps": false,
   "autoUpdateHosts": true
@@ -242,7 +214,7 @@ Edit `config.json` to customize:
 
 2. **Register with LAM:**
    ```bash
-   curl -X POST http://localhost:8080/api/register \
+   curl -X POST http://localhost:80/api/register \
      -H "Content-Type: application/json" \
      -d '{"project":"myapp","port":3000}'
    ```
@@ -313,7 +285,7 @@ The application tries to automatically update `/etc/hosts`, but this requires el
 
 ### Port Already in Use
 
-If port 8080 is busy, change the `httpPort` in `config.json`.
+If port 80 is busy, change the `httpPort` in `config.json`.
 
 ## Contributing
 
