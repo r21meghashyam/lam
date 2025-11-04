@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Label</key>
+        <string>com.lam</string>
+
+        <key>ProgramArguments</key>
+        <array>
+            <string>/path/to/lam/scripts/start-lam.sh</string>
+        </array>
+
+        <key>WorkingDirectory</key>
+        <string>/path/to/lam</string>
+
+        <key>RunAtLoad</key>
+        <true />
+
+        <key>KeepAlive</key>
+        <true />
+
+        <key>StandardOutPath</key>
+        <string>/var/log/lam.log</string>
+
+        <key>StandardErrorPath</key>
+        <string>/var/log/lam.error.log</string>
+
+        <key>UserName</key>
+        <string>root</string>
+
+        <key>GroupName</key>
+        <string>wheel</string>
+
+        <key>EnvironmentVariables</key>
+        <dict>
+            <key>PATH</key>
+            <string>/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/opt/homebrew/bin</string>
+        </dict>
+    </dict>
+</plist>

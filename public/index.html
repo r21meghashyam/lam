@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAM - Localhost Apps Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 LAM - Localhost Apps Manager</h1>
+            <p>Map local ports to custom .local domains</p>
+        </header>
+
+        <div class="add-form">
+            <h2>Add New Mapping</h2>
+            <form id="addMappingForm">
+                <div class="form-group">
+                    <label for="project">Project Name:</label>
+                    <input type="text" id="project" placeholder="e.g., myapp" required>
+                </div>
+                <div class="form-group">
+                    <label for="port">Port:</label>
+                    <input type="number" id="port" placeholder="e.g., 3000" required>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="https">
+                        Enable HTTPS
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Mapping</button>
+            </form>
+        </div>
+
+        <div class="mappings">
+            <h2>Current Mappings</h2>
+            <div id="mappingsList" class="mappings-list">
+                <!-- Mappings will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

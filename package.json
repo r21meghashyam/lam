@@ -1,0 +1,29 @@
+{
+    "name": "lam-cli",
+    "version": "1.1.0",
+    "description": "Localhost Apps Manager - A local reverse proxy and domain manager",
+    "main": "server.js",
+    "bin": {
+        "lam-cli": "./bin/lam.js"
+    },
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js",
+        "start:service": "./scripts/start-lam.sh",
+        "install:service": "./scripts/install-service.sh",
+        "uninstall:service": "./scripts/uninstall-service.sh"
+    },
+    "keywords": [
+        "proxy",
+        "localhost",
+        "development",
+        "domain-manager"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "http-proxy": "^1.18.1"
+    }
+}
