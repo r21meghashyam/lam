@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Pre-push hook for automatic versioning
+# This hook runs before every push and automatically bumps the patch version
+# To skip versioning for a specific push, use: git push --no-verify
+
+echo "🔄 Running pre-push hook: automatic versioning..."
+
+# Allow skipping with --no-verify flag
+if [ "$GIT_PUSH_OPTION_SKIP_HOOK" = "1" ] || [ "$GIT_SKIP_HOOKS" = "1" ]; then
+    echo "⏭️  Skipping pre-push hook (--no-verify used)"
+    exit 0
+fi
+
+# Get the current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Only run versioning on main branch pushes
+if [ "$current_branch" != "main" ]; then
+    echo "ℹ️  Skipping automatic versioning (not on main branch)"
+    exit 0
+fi
+
+# Check if we're pushing to a remote (not just local operations)
+if [ -z "$1" ]; then
+    echo "ℹ️  Skipping versioning (no remote specified)"
+    exit 0
+fi
+
+# Read push details from stdin to check if there are commits being pushed
+commits_pushed=false
+while read local_ref local_sha remote_ref remote_sha; do
+    if [ "$local_sha" != "$remote_sha" ]; then
+        commits_pushed=true
+        break
+    fi
+done
+
+if [ "$commits_pushed" = false ]; then
+    echo "ℹ️  No new commits to push"
+    exit 0
+fi
+
+echo "📦 Bumping patch version..."
+npm version patch
+
+# Get the new version
+new_version=$(node -p "require('./package.json').version")
+
+echo "🏷️  Creating git tag v$new_version..."
+git add package.json
+git commit -m "chore: bump version to $new_version"
+git tag "v$new_version"
+
+echo "📤 Pushing tags to remote..."
+git push origin "v$new_version"
+
+echo "✅ Version bumped to $new_version and tagged as v$new_version"
+echo "🚀 Ready to push with new version!"
+
+exit 0
