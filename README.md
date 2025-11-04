@@ -249,7 +249,7 @@ lam/
 
 ## Next.js Integration
 
-Use the [Next.js LAM Plugin](https://github.com/your-repo/nextjs-lam-plugin) for automatic integration:
+Use the [Next.js LAM Plugin](https://www.npmjs.com/package/nextjs-lam-plugin/) for automatic integration:
 
 ```bash
 npm install --save-dev nextjs-lam-plugin
