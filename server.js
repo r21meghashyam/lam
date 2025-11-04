@@ -1,5 +1,4 @@
 const express = require('express');
-const http = require('http');
 const httpProxy = require('http-proxy');
 const fs = require('fs');
 const path = require('path');
