@@ -1,6 +1,6 @@
 {
     "name": "lam-cli",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "description": "Localhost Apps Manager - A local reverse proxy and domain manager",
     "main": "server.js",
     "bin": {
