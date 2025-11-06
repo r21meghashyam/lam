@@ -300,11 +300,12 @@ addMappingForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const project = document.getElementById('project').value.trim();
+    const tld = document.getElementById('tld').value.trim();
     const port = document.getElementById('port').value;
     const https = document.getElementById('https').checked;
 
-    if (project && port) {
-        addMapping(project, port, https);
+    if (project && tld && port) {
+        addMapping(project, tld, port, https);
     }
 });
 

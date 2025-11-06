@@ -18,9 +18,29 @@
         <div class="add-form">
             <h2>Add New Mapping</h2>
             <form id="addMappingForm">
-                <div class="form-group">
-                    <label for="project">Project Name:</label>
-                    <input type="text" id="project" placeholder="e.g., myapp" required>
+                <div class="form-row">
+                    <div class="form-group w100">
+                        <label for="project">Project Name:</label>
+                        <input type="text" id="project" placeholder="e.g., myapp" required>
+                    </div>
+                    <div style="font-size: x-large;">.</div>
+                    <div class="form-group">
+                        <label for="tld">TLD:</label>
+                        <input type="text" id="tld" placeholder="e.g., local, dev, test" value="local"
+                            list="tld-suggestions" required>
+                        <datalist id="tld-suggestions">
+                            <option value="local">
+                            <option value="dev">
+                            <option value="test">
+                            <option value="staging">
+                            <option value="app">
+                            <option value="localhost">
+                            <option value="internal">
+                            <option value="demo">
+                            <option value="preview">
+                            <option value="qa">
+                        </datalist>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="port">Port:</label>

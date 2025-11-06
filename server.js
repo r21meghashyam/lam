@@ -187,13 +187,13 @@ const scanLocalServers = () => {
 
 // API Routes
 app.post('/api/register', (req, res) => {
-    const { project, port, https = false, proxy = false } = req.body;
+    const { project, port, https = false, proxy = false, tld = 'local' } = req.body;
 
     if (!project || !port) {
         return res.status(400).json({ error: 'Project name and port are required' });
     }
 
-    const domain = `${project}.local`;
+    const domain = `${project}.${tld}`;
 
     // Check if mapping already exists
     const existingIndex = mappings.mappings.findIndex(m => m.domain === domain);
