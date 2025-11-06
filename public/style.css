@@ -34,7 +34,8 @@ header p {
 }
 
 .add-form,
-.mappings {
+.mappings,
+.servers {
     background: white;
     border-radius: 10px;
     padding: 30px;
@@ -43,7 +44,8 @@ header p {
 }
 
 .add-form h2,
-.mappings h2 {
+.mappings h2,
+.servers h2 {
     margin-bottom: 20px;
     color: #333;
     font-size: 1.5rem;
@@ -115,6 +117,80 @@ input[type="number"]:focus {
 
 .btn-danger:hover {
     background: #c82333;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.refresh-btn {
+    margin-bottom: 20px;
+}
+
+/* Servers table styles */
+.servers-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.servers-table th,
+.servers-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.servers-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.servers-table tr:hover {
+    background: #f8f9fa;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge.open {
+    background: #d4edda;
+    color: #155724;
+}
+
+.mapped-yes {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.mapped-no {
+    color: #6c757d;
+}
+
+.server-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
 }
 
 .mappings-list {

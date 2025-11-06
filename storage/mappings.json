@@ -1,0 +1,10 @@
+{
+  "mappings": [
+    {
+      "domain": "fitwood.local",
+      "port": 3000,
+      "https": false,
+      "proxy": true
+    }
+  ]
+}
