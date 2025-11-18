@@ -215,7 +215,7 @@ function displayServers(servers) {
         const mapBtn = document.createElement('button');
         mapBtn.className = 'btn btn-primary btn-small';
         mapBtn.textContent = 'Map';
-        mapBtn.onclick = () => quickMapServer(server.port);
+        mapBtn.onclick = () => quickMapServer(server);
         actionsDiv.appendChild(mapBtn);
 
         actionsCell.appendChild(actionsDiv);
@@ -274,8 +274,8 @@ async function addMapping(project, tld, port, https) {
 }
 
  // Quick map server
-async function quickMapServer(port) {
-    const project = prompt(`Enter a project name for port ${port}:`, `app${port}`);
+async function quickMapServer(server) {
+    const project = await customPrompt(`Enter a project name for port ${server.port}:`, `${server.process||`app-`+server.port}`, `e.g., myproject, api, frontend`);
     if (!project || !project.trim()) {
         return;
     }
@@ -288,7 +288,7 @@ async function quickMapServer(port) {
             },
             body: JSON.stringify({
                 project: project.trim(),
-                port: parseInt(port),
+                port: parseInt(server.port),
                 https: false,
                 tld: 'local'
             })
@@ -311,7 +311,8 @@ async function quickMapServer(port) {
 
 // Remove mapping
 async function removeMapping(domain) {
-    if (!confirm(`Are you sure you want to remove the mapping for ${domain}?`)) {
+    const confirmed = await customConfirm(`Are you sure you want to remove the mapping for ${domain}?`);
+    if (!confirmed) {
         return;
     }
 
@@ -332,6 +333,91 @@ async function removeMapping(domain) {
         console.error('Error removing mapping:', error);
         showToast('Error removing mapping. Please try again.', 'error');
     }
+}
+
+// Modal Dialog Management
+let modalResolve = null;
+let modalReject = null;
+
+function showModal(title, message, inputValue = null, inputPlaceholder = null) {
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalInput = document.getElementById('modalInput');
+    const modalClose = document.getElementById('modalClose');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+
+    if (inputValue !== null) {
+        modalInput.style.display = 'block';
+        modalInput.value = inputValue;
+        modalInput.placeholder = inputPlaceholder || '';
+        modalInput.focus();
+        modalConfirm.textContent = 'OK';
+    } else {
+        modalInput.style.display = 'none';
+        modalConfirm.textContent = 'Confirm';
+    }
+
+    modalOverlay.classList.add('show');
+
+    return new Promise((resolve, reject) => {
+        modalResolve = resolve;
+        modalReject = reject;
+
+        const closeModal = () => {
+            modalOverlay.classList.remove('show');
+            modalResolve = null;
+            modalReject = null;
+        };
+
+        const handleConfirm = () => {
+            const result = inputValue !== null ? modalInput.value.trim() : true;
+            closeModal();
+            resolve(result);
+        };
+
+        const handleCancel = () => {
+            closeModal();
+            if (inputValue !== null) {
+                resolve(null);
+            } else {
+                resolve(false);
+            }
+        };
+
+        modalConfirm.onclick = handleConfirm;
+        modalCancel.onclick = handleCancel;
+        modalClose.onclick = handleCancel;
+
+        // Handle Enter key for confirm
+        if (inputValue !== null) {
+            modalInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    handleConfirm();
+                }
+            };
+        }
+
+        // Handle Escape key for cancel
+        document.onkeydown = (e) => {
+            if (e.key === 'Escape') {
+                handleCancel();
+            }
+        };
+    });
+}
+
+// Replacement functions for browser prompts
+function customPrompt(message, defaultValue = '', placeholder = '') {
+    return showModal('Input Required', message, defaultValue, placeholder);
+}
+
+function customConfirm(message) {
+    return showModal('Confirm Action', message);
 }
 
 // Theme management

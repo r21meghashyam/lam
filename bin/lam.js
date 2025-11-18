@@ -7,7 +7,6 @@ if (command === 'start') {
     require('../server.js');
 } else {
     console.log('LAM CLI');
-    console.log('Usage: lam-cli start');
-    console.log('Installation: npm i -g lam-cli@latest');
+    console.log('Update: npm i -g lam-cli@latest');
     console.log('Running server: sudo lam-cli start');
 }
