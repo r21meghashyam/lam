@@ -10,6 +10,16 @@
 </head>
 
 <body>
+    <div id="updateBanner" class="update-banner" style="display: none;">
+        <div class="banner-content">
+            <span class="banner-icon">ℹ️</span>
+            <span class="banner-text">
+                New LAM version <span id="latestVersion"></span> is available!
+                <a href="#" id="updateLink" class="banner-link">Update with: npm install -g lam-cli@latest</a>
+            </span>
+            <button id="closeBanner" class="banner-close">&times;</button>
+        </div>
+    </div>
     <div class="container">
         <header>
             <img src="/app-icon.jpg" width="64px" class="logo" alt="logo" />

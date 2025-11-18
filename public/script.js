@@ -53,19 +53,25 @@ async function checkForUpdates() {
         const currentVer = current.version.split('.').map(Number);
         const latestVer = latest.version.split('.').map(Number);
 
-        const isNewer = latestVer.some((part, i) => part > currentVer[i]) ||
+        const isNewer = latestVer.some((part, i) => part > (currentVer[i] || 0)) ||
                        latestVer.length > currentVer.length;
 
         if (isNewer) {
-            showToast(
-                `New LAM version available: ${latest.version}\nUpdate with: npm install -g lam-cli@latest`,
-                'info'
-            );
+            showUpdateBanner(latest.version);
         }
     } catch (error) {
         console.error('Error checking for updates:', error);
-        // Silently fail - don't show error toast for update check
+        // Silently fail - don't show error for update check
     }
+}
+
+function showUpdateBanner(version) {
+    document.getElementById('latestVersion').textContent = version;
+    document.getElementById('updateBanner').style.display = 'block';
+}
+
+function hideUpdateBanner() {
+    document.getElementById('updateBanner').style.display = 'none';
 }
 
 // Load and display mappings
@@ -379,9 +385,22 @@ refreshServersBtn.addEventListener('click', () => {
     loadServers();
 });
 
-// Initialize
+// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     checkForUpdates();
     loadMappings();
     loadServers();
+
+    // Banner close button
+    document.getElementById('closeBanner').addEventListener('click', () => {
+        hideUpdateBanner();
+    });
+
+    // Make update link scroll to console or copy command
+    document.getElementById('updateLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        navigator.clipboard.writeText('npm install -g lam-cli@latest').then(() => {
+            showToast('Update command copied to clipboard!', 'success');
+        });
+    });
 });
