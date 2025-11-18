@@ -271,19 +271,75 @@ const proxy = httpProxy.createProxyServer({
 // Handle proxy errors
 proxy.on('error', (err, req, res) => {
     if (!res.headersSent) {
-        if (err.code === 'ECONNREFUSED') {
-            res.status(502).json({
-                error: 'Proxy Error',
-                message: `Unable to connect to target server. Make sure the development server is running.`,
-                domain: req.headers.host
-            });
+        const host = req.headers.host;
+        const mapping = mappings.mappings.find(m => m.domain === host);
+
+        if (['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNRESET', 'EHOSTUNREACH'].includes(err.code)) {
+            res.status(502).send(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>LAM - Server Not Reachable</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                        .container { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 2rem; max-width: 500px; text-align: center; }
+                        .logo { margin-bottom: 1rem; }
+                        h1 { color: #333; margin-bottom: 1rem; }
+                        p { color: #666; margin-bottom: 2rem; line-height: 1.6; }
+                        .domain { font-family: monospace; background: #f8f8f8; padding: 0.5rem; border-radius: 4px; margin: 1rem 0; }
+                        .port { font-family: monospace; background: #fff3cd; color: #856404; padding: 0.5rem; border-radius: 4px; margin: 1rem 0; }
+                        .btn { display: inline-block; background: #007bff; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 4px; margin: 0.5rem; }
+                        .btn:hover { background: #0056b3; }
+                        .btn-secondary { background: #6c757d; }
+                        .btn-secondary:hover { background: #545b62; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="logo"><img src="http://locahost/app-icon.jpg" alt="LAM" style="width: 64px; height: 64px;"></div>
+                        <h1>Server Not Reachable</h1>
+                        <p>The domain <strong class="domain">${host}</strong> is configured in LAM but the target server is not running.</p>
+                        <p class="port">Target: localhost:${mapping ? mapping.port : 'unknown'}</p>
+                        <p>Please start your development server and try again.</p>
+                        <a href="http://localhost" class="btn">Go to LAM Dashboard</a>
+                        <button onclick="window.location.reload()" class="btn btn-secondary">Try Again</button>
+                    </div>
+                </body>
+                </html>
+            `);
         } else {
             console.error('Proxy error:', err.message);
-            res.status(500).json({
-                error: 'Proxy Error',
-                message: 'Internal proxy error',
-                domain: req.headers.host
-            });
+            res.status(500).send(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>LAM - Proxy Error</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                        .container { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 2rem; max-width: 500px; text-align: center; }
+                        .logo { margin-bottom: 1rem; }
+                        h1 { color: #333; margin-bottom: 1rem; }
+                        p { color: #666; margin-bottom: 2rem; line-height: 1.6; }
+                        .domain { font-family: monospace; background: #f8f8f8; padding: 0.5rem; border-radius: 4px; margin: 1rem 0; }
+                        .btn { display: inline-block; background: #007bff; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 4px; margin: 0.5rem; }
+                        .btn:hover { background: #0056b3; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="logo"><img src="http://locahost/app-icon.jpg" alt="LAM" style="width: 64px; height: 64px;"></div>
+                        <h1>Proxy Error</h1>
+                        <p>An error occurred while connecting to <strong class="domain">${host}</strong>.</p>
+                        <p>Please check your LAM configuration and try again.</p>
+                        <a href="/" class="btn">Go to LAM Dashboard</a>
+                    </div>
+                </body>
+                </html>
+            `);
         }
     }
 });
