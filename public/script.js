@@ -123,7 +123,7 @@ function displayMappings(mappings) {
         title.textContent = mapping.domain;
 
         const details = document.createElement('p');
-        details.textContent = `Port: ${mapping.port} | Protocol: ${mapping.https ? 'HTTPS' : 'HTTP'} | Mode: ${mapping.proxy ? 'Proxy' : 'Redirect'}`;
+        details.innerHTML = `Port: <strong>${mapping.port}</strong> | Protocol: <strong>${mapping.https ? '🔒 HTTPS' : '🌐 HTTP'}</strong>`;
 
         mappingInfo.appendChild(title);
         mappingInfo.appendChild(details);
@@ -133,29 +133,17 @@ function displayMappings(mappings) {
 
         const visitBtn = document.createElement('button');
         visitBtn.className = 'btn btn-primary';
-        visitBtn.textContent = 'Visit';
+        visitBtn.textContent = '🌐 Visit';
         visitBtn.onclick = () => {
-            if (mapping.proxy) {
-                // For proxy mode, visit the .local domain (proxy handles routing)
-                window.open(`http://${mapping.domain}`, '_blank');
-            } else {
-                // For redirect mode, visit the final localhost:port URL
-                window.open(`http://${mapping.domain}:${mapping.port}`, '_blank');
-            }
+            window.open(`http://${mapping.domain}`, '_blank');
         };
-
-        const proxyBtn = document.createElement('button');
-        proxyBtn.className = `btn ${mapping.proxy ? 'btn-warning' : 'btn-secondary'}`;
-        proxyBtn.textContent = mapping.proxy ? 'Proxy Mode' : 'Redirect Mode';
-        proxyBtn.onclick = () => toggleProxyMode(mapping.domain);
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
-        deleteBtn.textContent = 'Remove';
+        deleteBtn.textContent = '🗑️ Remove';
         deleteBtn.onclick = () => removeMapping(mapping.domain);
 
         mappingActions.appendChild(visitBtn);
-        mappingActions.appendChild(proxyBtn);
         mappingActions.appendChild(deleteBtn);
 
         mappingItem.appendChild(mappingInfo);
@@ -210,7 +198,7 @@ function displayServers(servers) {
         const statusCell = document.createElement('td');
         const statusBadge = document.createElement('span');
         statusBadge.className = `status-badge ${server.status}`;
-        statusBadge.textContent = server.status.toUpperCase();
+        statusBadge.innerHTML = server.status === 'open' ? '🟢 OPEN' : '🔴 CLOSED';
         statusCell.appendChild(statusBadge);
 
         const urlCell = document.createElement('td');
@@ -285,28 +273,7 @@ async function addMapping(project, tld, port, https) {
     }
 }
 
-// Toggle proxy mode
-async function toggleProxyMode(domain) {
-    try {
-        const response = await fetch(`/api/mappings/${domain}/toggle-proxy`, {
-            method: 'PATCH'
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            showToast(`Proxy mode ${result.proxy ? 'enabled' : 'disabled'} for ${domain}`, 'success');
-            loadMappings(); // Refresh the list
-        } else {
-            showToast(`Error: ${result.error}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error toggling proxy mode:', error);
-        showToast('Error toggling proxy mode. Please try again.', 'error');
-    }
-}
-
-// Quick map server
+ // Quick map server
 async function quickMapServer(port) {
     const project = prompt(`Enter a project name for port ${port}:`, `app${port}`);
     if (!project || !project.trim()) {
@@ -367,6 +334,41 @@ async function removeMapping(domain) {
     }
 }
 
+// Theme management
+function getStoredTheme() {
+    return localStorage.getItem('lam-theme') || 'light';
+}
+
+function setStoredTheme(theme) {
+    localStorage.setItem('lam-theme', theme);
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+        const sunIcon = themeBtn.querySelector('.sun-icon');
+        const moonIcon = themeBtn.querySelector('.moon-icon');
+
+        if (theme === 'dark') {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'inline';
+            themeBtn.title = 'Switch to light theme';
+        } else {
+            sunIcon.style.display = 'inline';
+            moonIcon.style.display = 'none';
+            themeBtn.title = 'Switch to dark theme';
+        }
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = getStoredTheme();
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setStoredTheme(newTheme);
+    applyTheme(newTheme);
+}
+
 // Event listeners
 addMappingForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -387,6 +389,9 @@ refreshServersBtn.addEventListener('click', () => {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Apply saved theme
+    applyTheme(getStoredTheme());
+
     checkForUpdates();
     loadMappings();
     loadServers();
@@ -402,5 +407,11 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText('npm install -g lam-cli@latest').then(() => {
             showToast('Update command copied to clipboard!', 'success');
         });
+    });
+
+    // Theme toggle button
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        toggleTheme();
+        showToast(`Switched to ${getStoredTheme() === 'light' ? 'light' : 'dark'} theme!`, 'info');
     });
 });

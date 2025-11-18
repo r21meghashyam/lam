@@ -9,7 +9,7 @@
     <link ref="favicon" href="/app-icon.jpg" />
 </head>
 
-<body>
+<body class="theme-light">
     <div id="updateBanner" class="update-banner" style="display: none;">
         <div class="banner-content">
             <span class="banner-icon">ℹ️</span>
@@ -22,22 +22,35 @@
     </div>
     <div class="container">
         <header>
-            <img src="/app-icon.jpg" width="64px" class="logo" alt="logo" />
-            <h1> Localhost Apps Manager</h1>
-            <p>Map local ports to custom .local domains</p>
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="/app-icon.jpg" width="64px" class="logo" alt="LAM" />
+                    <div class="title-section">
+                        <h1>Localhost Apps Manager</h1>
+                        <p>Map local ports to custom .local domains</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle theme">
+                        <span class="sun-icon">☀️</span>
+                        <span class="moon-icon" style="display: none;">🌙</span>
+                    </button>
+                </div>
+            </div>
         </header>
 
         <div class="add-form">
-            <h2>Add New Mapping</h2>
+            <h2><span class="section-icon">➕</span> Add New Mapping</h2>
             <form id="addMappingForm">
                 <div class="form-row">
                     <div class="form-group w100">
-                        <label for="project">Project Name:</label>
-                        <input type="text" id="project" placeholder="e.g., myapp" required>
+                        <label for="project"><span class="field-icon">🏷️</span> Project Name:</label>
+                        <input type="text" id="project" placeholder="e.g., myapp, react-app, api" required>
+                        <small class="help-text">Name your project (no spaces, alphanumerics)</small>
                     </div>
-                    <div style="font-size: x-large;">.</div>
+                    <span class="dot-separator">.</span>
                     <div class="form-group">
-                        <label for="tld">TLD:</label>
+                        <label for="tld"><span class="field-icon">🌐</span> TLD:</label>
                         <input type="text" id="tld" placeholder="e.g., local, dev, test" value="local"
                             list="tld-suggestions" required>
                         <datalist id="tld-suggestions">
@@ -52,32 +65,39 @@
                             <option value="preview">
                             <option value="qa">
                         </datalist>
+                        <small class="help-text">Domain extension</small>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="port">Port:</label>
-                    <input type="number" id="port" placeholder="e.g., 3000" required>
+                    <label for="port"><span class="field-icon">🔌</span> Port:</label>
+                    <input type="number" id="port" placeholder="e.g., 3000" min="1" max="65535" required>
+                    <small class="help-text">Localhost port where your app runs</small>
                 </div>
                 <div class="form-group">
                     <label class="checkbox-label">
                         <input type="checkbox" id="https">
-                        Enable HTTPS
+                        <span class="checkbox-icon">🔒</span> Enable HTTPS
+                        <small>(Advanced - requires SSL setup)</small>
                     </label>
                 </div>
-                <button type="submit" class="btn btn-primary">Add Mapping</button>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span class="btn-icon">✨</span> Create Mapping
+                </button>
             </form>
         </div>
 
         <div class="mappings">
-            <h2>Current Mappings</h2>
+            <h2><span class="section-icon">🎯</span> Current Mappings</h2>
             <div id="mappingsList" class="mappings-list">
                 <!-- Mappings will be loaded here -->
             </div>
         </div>
 
         <div class="servers">
-            <h2>Unmapped Local Servers (detected)</h2>
-            <button id="refreshServers" class="btn btn-secondary refresh-btn">🔄 Refresh</button>
+            <h2><span class="section-icon">🔍</span> Unmapped Local Servers (detected)</h2>
+            <button id="refreshServers" class="btn btn-secondary refresh-btn">
+                <span class="btn-icon">🔄</span> Refresh
+            </button>
             <div id="serversList" class="servers-list">
                 <!-- Servers will be loaded here -->
             </div>

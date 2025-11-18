@@ -1,17 +1,21 @@
 # 🧠 LAM - Localhost Apps Manager
 
-A local reverse proxy and domain manager that lets developers map local ports to
-custom `.local` domains with optional HTTPS support.
+A fast, modern local reverse proxy that maps custom `.local` domains to
+localhost ports with built-in DNS resolution and a beautiful web dashboard.
+
+![LAM Dashboard](docs/screenshot.png)
 
 ## Features
 
-- **Domain ↔ Port Mapping**: Map custom `.local` domains to localhost ports
-- **Local mDNS Responder**: Runs a dedicated mDNS responder for instant `.local`
-  domain resolution
-- **Web Dashboard**: User-friendly interface to manage mappings
-- **API Integration**: REST API for programmatic registration
-- **Persistent Storage**: JSON-based storage for mappings
-- **Instant Redirects**: Zero-latency HTTP redirects to localhost ports
+- **Instant Domain Mapping**: Map any localhost port to custom `.local` domains
+- **Built-in mDNS Server**: Zero-configuration DNS resolution for `.local`
+  domains
+- **Modern Web Dashboard**: Beautiful interface with light/dark theme toggle
+- **HTTP Proxy Mode**: Full WebSocket and HMR support for development
+- **Automatic Server Detection**: Discovers running development servers
+- **REST API**: Programmatic registration and management
+- **Persistent Storage**: JSON-based configuration storage
+- **System Service**: Auto-start on boot with proper permissions
 
 ## Quick Start
 
@@ -229,30 +233,44 @@ Edit `~/.lam/config.json` to customize:
 
 3. **Access your app** at `http://myapp.local`
 
-## Project Structure
+## Architecture
+
+LAM uses a **single-proxy architecture** that provides superior performance and
+compatibility:
+
+- **HTTP Proxy**: All `.local` domains are routed through a high-performance
+  HTTP proxy
+- **WebSocket Support**: Full WebSocket proxying enables HMR (Hot Module
+  Replacement) for modern frameworks
+- **mDNS Responder**: Built-in DNS server eliminates the need for hosts file
+  modifications
+- **Persistent Storage**: JSON-based configuration with real-time
+  synchronization
+
+### Project Structure
 
 ```
 lam/
-├── server.js                 # Main application server
+├── server.js                 # Main proxy server with mDNS & REST API
 ├── package.json
-├── config.json               # System configuration
 ├── bin/
 │   └── lam.js                # CLI installer (npx lam-cli)
 ├── storage/
-│   └── mappings.json         # Domain-port mappings
+│   └── mappings.json         # Domain-port mappings storage
 ├── certs/                    # SSL certificates (future)
 ├── scripts/
-│   ├── start-lam.sh          # Easy startup script
-│   ├── install-service.sh    # Service installation script
-│   ├── uninstall-service.sh  # Service uninstallation script
-│   ├── lam.service           # Systemd service file (Linux)
-│   ├── com.lam.plist         # Launchd service file (macOS)
+│   ├── start-lam.sh          # Development startup script
+│   ├── install-service.sh    # System service installation
+│   ├── uninstall-service.sh  # Service removal script
+│   ├── lam.service           # Linux systemd service file
+│   ├── com.lam.plist         # macOS launchd service file
 │   └── update-hosts.js       # Manual hosts file management
 ├── public/
-│   ├── index.html            # Web dashboard
-│   ├── style.css             # Dashboard styles
-│   └── script.js             # Dashboard functionality
-└── README.md
+│   ├── index.html            # Modern web dashboard with themes
+│   ├── style.css             # Responsive CSS with dark/light themes
+│   └── script.js             # Dashboard interactivity
+└── docs/
+    └── screenshot.png        # Dashboard screenshot
 ```
 
 ## Next.js Integration

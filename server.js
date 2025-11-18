@@ -188,7 +188,7 @@ const scanLocalServers = () => {
 
 // API Routes
 app.post('/api/register', (req, res) => {
-    const { project, port, https = false, proxy = false, tld = 'local' } = req.body;
+    const { project, port, https = false, tld = 'local' } = req.body;
 
     if (!project || !port) {
         return res.status(400).json({ error: 'Project name and port are required' });
@@ -199,9 +199,9 @@ app.post('/api/register', (req, res) => {
     // Check if mapping already exists
     const existingIndex = mappings.mappings.findIndex(m => m.domain === domain);
     if (existingIndex >= 0) {
-        mappings.mappings[existingIndex] = { domain, port, https, proxy };
+        mappings.mappings[existingIndex] = { domain, port, https, proxy: true };
     } else {
-        mappings.mappings.push({ domain, port, https, proxy });
+        mappings.mappings.push({ domain, port, https, proxy: true });
     }
 
     saveMappings();
@@ -211,8 +211,7 @@ app.post('/api/register', (req, res) => {
         domain,
         url: https && config.enableHttps ? `https://${domain}` : `http://${domain}`,
         port,
-        https: https && config.enableHttps,
-        proxy
+        https: https && config.enableHttps
     });
 });
 
@@ -235,21 +234,7 @@ app.delete('/api/mappings/:domain', (req, res) => {
     }
 });
 
-app.patch('/api/mappings/:domain/toggle-proxy', (req, res) => {
-    const domain = req.params.domain;
-    const index = mappings.mappings.findIndex(m => m.domain === domain);
 
-    if (index >= 0) {
-        mappings.mappings[index].proxy = !mappings.mappings[index].proxy;
-        saveMappings();
-        res.json({
-            domain,
-            proxy: mappings.mappings[index].proxy
-        });
-    } else {
-        res.status(404).json({ error: 'Mapping not found' });
-    }
-});
 
 app.get('/api/servers', async (req, res) => {
     try {
@@ -350,24 +335,17 @@ proxy.on('error', (err, req, res) => {
     }
 });
 
-// Handle both redirect and proxy modes
+// Handle proxy mode for all .local domains
 app.use((req, res, next) => {
     const host = req.headers.host;
     if (host && host.endsWith('.local')) {
         const mapping = mappings.mappings.find(m => m.domain === host);
         if (mapping) {
-            if (mapping.proxy) {
-                // Use proxy mode with WebSocket support
-                proxy.web(req, res, {
-                    target: `http://127.0.0.1:${mapping.port}`
-                });
-                return;
-            } else {
-                // Use redirect mode (default)
-                const targetUrl = `http://${host}:${mapping.port}${req.url}`;
-                res.redirect(302, targetUrl);
-                return;
-            }
+            // Use proxy mode with WebSocket support for all requests
+            proxy.web(req, res, {
+                target: `http://127.0.0.1:${mapping.port}`
+            });
+            return;
         }
     }
     next();
