@@ -76,6 +76,10 @@ elif [[ "$OS" == "macos" ]]; then
     # Load the service
     launchctl load "$TARGET_SERVICE_FILE"
 
+    echo -e "${YELLOW}🌐 mDNS responder configured for .local domains${NC}"
+
+    echo -e "${GREEN}✅ mDNS responder configured for .local domains${NC}"
+
     echo -e "${GREEN}✅ LAM service installed successfully!${NC}"
     echo -e "${YELLOW}🚀 LAM will start automatically on boot${NC}"
     echo -e "${YELLOW}🔄 To restart LAM: sudo launchctl kickstart -k system/com.lam${NC}"

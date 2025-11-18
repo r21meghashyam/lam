@@ -1,11 +1,13 @@
 # 🧠 LAM - Localhost Apps Manager
 
-A local reverse proxy and domain manager that lets developers map local ports to custom `.local` domains with optional HTTPS support.
+A local reverse proxy and domain manager that lets developers map local ports to
+custom `.local` domains with optional HTTPS support.
 
 ## Features
 
 - **Domain ↔ Port Mapping**: Map custom `.local` domains to localhost ports
-- **Automatic Hosts Management**: Automatically updates `/etc/hosts` (requires sudo for initial setup)
+- **Local mDNS Responder**: Runs a dedicated mDNS responder for instant `.local`
+  domain resolution
 - **Web Dashboard**: User-friendly interface to manage mappings
 - **API Integration**: REST API for programmatic registration
 - **Persistent Storage**: JSON-based storage for mappings
@@ -29,7 +31,8 @@ Start LAM:
 sudo lam-cli start
 ```
 
-**That's it!** LAM is now running at `http://localhost:80` and you can start using `.local` domains for your development projects.
+**That's it!** LAM is now running at `http://localhost:80` and you can start
+using `.local` domains for your development projects.
 
 ### How LAM Works
 
@@ -92,6 +95,7 @@ npm run start:service
 ```
 
 This script automatically:
+
 - Installs dependencies if needed
 - Handles sudo privileges for port binding and hosts file access
 - Starts LAM with proper configuration
@@ -113,6 +117,7 @@ This installs LAM as a system service that starts automatically on boot.
 #### 2. Manage the Service
 
 **Linux (systemd):**
+
 ```bash
 sudo systemctl start lam     # Start service
 sudo systemctl stop lam      # Stop service
@@ -121,6 +126,7 @@ sudo systemctl status lam    # Check status
 ```
 
 **macOS (launchd):**
+
 ```bash
 sudo launchctl kickstart -k system/com.lam  # Restart service
 sudo launchctl stop com.lam                 # Stop service
@@ -159,6 +165,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "domain": "myapp.local",
@@ -182,7 +189,8 @@ DELETE /api/mappings/myapp.local
 
 ## Manual Hosts File Management
 
-If automatic hosts file updates don't work, you can manually update `/etc/hosts`:
+If automatic hosts file updates don't work, you can manually update
+`/etc/hosts`:
 
 ```bash
 # Add entry
@@ -249,7 +257,8 @@ lam/
 
 ## Next.js Integration
 
-Use the [Next.js LAM Plugin](https://www.npmjs.com/package/nextjs-lam-plugin/) for automatic integration:
+Use the [Next.js LAM Plugin](https://www.npmjs.com/package/nextjs-lam-plugin/)
+for automatic integration:
 
 ```bash
 npm install --save-dev nextjs-lam-plugin
@@ -257,7 +266,7 @@ npm install --save-dev nextjs-lam-plugin
 
 ```javascript
 // next.config.js
-const { withLam } = require('nextjs-lam-plugin');
+const { withLam } = require("nextjs-lam-plugin");
 
 module.exports = withLam({
   reactStrictMode: true,
@@ -265,6 +274,7 @@ module.exports = withLam({
 ```
 
 The plugin automatically:
+
 - Registers your Next.js dev server with LAM
 - Enables proxy mode for HMR support
 - Configures allowed origins for hot reloading
@@ -277,7 +287,8 @@ HTTPS support is planned for future releases using local CA certificates.
 
 ### Permission Denied for Hosts File
 
-The application tries to automatically update `/etc/hosts`, but this requires elevated privileges. If you see permission errors:
+The application tries to automatically update `/etc/hosts`, but this requires
+elevated privileges. If you see permission errors:
 
 1. **Option 1**: Run LAM with sudo (not recommended for development)
 2. **Option 2**: Manually update your hosts file

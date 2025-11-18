@@ -25,9 +25,11 @@
     "dependencies": {
         "cors": "^2.8.5",
         "express": "^4.18.2",
-        "http-proxy": "^1.18.1"
+        "http-proxy": "^1.18.1",
+        "multicast-dns": "^7.2.5"
     },
     "devDependencies": {
+        "dns-packet": "^5.6.1",
         "jest": "^30.2.0"
     }
 }

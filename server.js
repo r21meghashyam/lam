@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const net = require('net');
+const mdns = require('multicast-dns')();
 
 const app = express();
 
@@ -26,7 +27,7 @@ try {
             certsPath: path.join(require('os').homedir(), '.lam', 'certs'),
             hostsFile: "/etc/hosts",
             enableHttps: false,
-            autoUpdateHosts: true,
+            autoUpdateHosts: false,  // Disabled since mDNS responder handles resolution
             enableWebSocketProxy: false
         };
         fs.mkdirSync(path.dirname(configPath), { recursive: true });
@@ -369,6 +370,51 @@ app.use((req, res, next) => {
 
 // Serve static files for the web dashboard
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Start mDNS server for faster .local domain resolution
+mdns.on('query', function(query) {
+    const responses = [];
+
+    query.questions.forEach(function(q) {
+        const domain = q.name;
+        const type = q.type;
+
+        console.log(`mDNS Query: ${domain} (Type: ${type})`);
+
+        if (domain.endsWith('.local')) {
+            const mapping = mappings.mappings.find(m => m.domain === domain);
+            if (mapping) {
+                if (type === 'A') {
+                    console.log(`mDNS Resolved: ${domain} -> 127.0.0.1 (Port: ${mapping.port})`);
+                    responses.push({
+                        name: domain,
+                        type: 'A',
+                        ttl: 300,
+                        data: '127.0.0.1'
+                    });
+                } else if (type === 'AAAA') {
+                    console.log(`mDNS Resolved: ${domain} -> ::1 (Port: ${mapping.port})`);
+                    responses.push({
+                        name: domain,
+                        type: 'AAAA',
+                        ttl: 300,
+                        data: '::1'
+                    });
+                }
+            } else {
+                console.log(`mDNS Not found: ${domain}`);
+            }
+        } else {
+            console.log(`mDNS Ignored: ${domain} (Type: ${type}) - not .local domain`);
+        }
+    });
+
+    if (responses.length > 0) {
+        mdns.respond({ answers: responses });
+    }
+});
+
+console.log('mDNS server listening for .local queries');
 
 // Start server
 const PORT = config.httpPort || 8080;
