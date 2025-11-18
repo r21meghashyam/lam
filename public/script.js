@@ -38,6 +38,36 @@ function dismissToast(toast) {
         }
     }, 300);
 }
+
+// Check for updates
+async function checkForUpdates() {
+    try {
+        const [currentRes, latestRes] = await Promise.all([
+            fetch('/api/version'),
+            fetch('https://registry.npmjs.org/lam-cli/latest')
+        ]);
+
+        const current = await currentRes.json();
+        const latest = await latestRes.json();
+
+        const currentVer = current.version.split('.').map(Number);
+        const latestVer = latest.version.split('.').map(Number);
+
+        const isNewer = latestVer.some((part, i) => part > currentVer[i]) ||
+                       latestVer.length > currentVer.length;
+
+        if (isNewer) {
+            showToast(
+                `New LAM version available: ${latest.version}\nUpdate with: npm install -g lam-cli@latest`,
+                'info'
+            );
+        }
+    } catch (error) {
+        console.error('Error checking for updates:', error);
+        // Silently fail - don't show error toast for update check
+    }
+}
+
 // Load and display mappings
 async function loadMappings() {
     try {
@@ -351,6 +381,7 @@ refreshServersBtn.addEventListener('click', () => {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    checkForUpdates();
     loadMappings();
     loadServers();
 });

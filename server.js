@@ -261,6 +261,11 @@ app.get('/api/servers', async (req, res) => {
     }
 });
 
+app.get('/api/version', (req, res) => {
+    const pkg = require('./package.json');
+    res.json({ version: pkg.version });
+});
+
 // Create proxy server for WebSocket and HTTP proxying
 const proxy = httpProxy.createProxyServer({
     changeOrigin: true,
