@@ -299,7 +299,7 @@ proxy.on('error', (err, req, res) => {
                 </head>
                 <body>
                     <div class="container">
-                        <div class="logo"><img src="http://locahost/app-icon.jpg" alt="LAM" style="width: 64px; height: 64px;"></div>
+                        <div class="logo"><img src="http://localhost/app-icon.jpg" alt="LAM" style="width: 64px; height: 64px;"></div>
                         <h1>Server Not Reachable</h1>
                         <p>The domain <strong class="domain">${host}</strong> is configured in LAM but the target server is not running.</p>
                         <p class="port">Target: localhost:${mapping ? mapping.port : 'unknown'}</p>
