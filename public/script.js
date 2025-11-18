@@ -3,7 +3,41 @@ const addMappingForm = document.getElementById('addMappingForm');
 const mappingsList = document.getElementById('mappingsList');
 const serversList = document.getElementById('serversList');
 const refreshServersBtn = document.getElementById('refreshServers');
+const toastContainer = document.getElementById('toastContainer');
 
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <span>${message}</span>
+        <button class="close-btn">×</button>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // Show toast
+    setTimeout(() => toast.classList.add('show'), 100);
+
+    // Auto dismiss after 5 seconds
+    const dismissTimeout = setTimeout(() => dismissToast(toast), 5000);
+
+    // Close on click
+    const closeBtn = toast.querySelector('.close-btn');
+    closeBtn.addEventListener('click', () => {
+        clearTimeout(dismissTimeout);
+        dismissToast(toast);
+    });
+}
+
+function dismissToast(toast) {
+    toast.classList.remove('show');
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 300);
+}
 // Load and display mappings
 async function loadMappings() {
     try {
@@ -185,7 +219,7 @@ function displayEmptyServersState() {
 }
 
 // Add new mapping
-async function addMapping(project, port, https) {
+async function addMapping(project, tld, port, https) {
     try {
         const response = await fetch('/api/register', {
             method: 'POST',
@@ -195,22 +229,23 @@ async function addMapping(project, port, https) {
             body: JSON.stringify({
                 project,
                 port: parseInt(port),
-                https
+                https,
+                tld
             })
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            alert(`Mapping created successfully!\nDomain: ${result.domain}\nURL: ${result.url}`);
+            showToast(`Mapping created successfully!\nDomain: ${result.domain}\nURL: ${result.url}`, 'success');
             loadMappings(); // Refresh the list
             addMappingForm.reset(); // Clear the form
         } else {
-            alert(`Error: ${result.error}`);
+            showToast(`Error: ${result.error}`, 'error');
         }
     } catch (error) {
         console.error('Error adding mapping:', error);
-        alert('Error adding mapping. Please try again.');
+        showToast('Error adding mapping. Please try again.', 'error');
     }
 }
 
@@ -224,14 +259,14 @@ async function toggleProxyMode(domain) {
         const result = await response.json();
 
         if (response.ok) {
-            alert(`Proxy mode ${result.proxy ? 'enabled' : 'disabled'} for ${domain}`);
+            showToast(`Proxy mode ${result.proxy ? 'enabled' : 'disabled'} for ${domain}`, 'success');
             loadMappings(); // Refresh the list
         } else {
-            alert(`Error: ${result.error}`);
+            showToast(`Error: ${result.error}`, 'error');
         }
     } catch (error) {
         console.error('Error toggling proxy mode:', error);
-        alert('Error toggling proxy mode. Please try again.');
+        showToast('Error toggling proxy mode. Please try again.', 'error');
     }
 }
 
@@ -251,22 +286,23 @@ async function quickMapServer(port) {
             body: JSON.stringify({
                 project: project.trim(),
                 port: parseInt(port),
-                https: false
+                https: false,
+                tld: 'local'
             })
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            alert(`Mapping created successfully!\nDomain: ${result.domain}\nURL: ${result.url}`);
+            showToast(`Mapping created successfully!\nDomain: ${result.domain}\nURL: ${result.url}`, 'success');
             loadMappings(); // Refresh mappings
             loadServers(); // Refresh servers to show updated mapped status
         } else {
-            alert(`Error: ${result.error}`);
+            showToast(`Error: ${result.error}`, 'error');
         }
     } catch (error) {
         console.error('Error creating mapping:', error);
-        alert('Error creating mapping. Please try again.');
+        showToast('Error creating mapping. Please try again.', 'error');
     }
 }
 
@@ -282,16 +318,16 @@ async function removeMapping(domain) {
         });
 
         if (response.ok) {
-            alert('Mapping removed successfully!');
+            showToast('Mapping removed successfully!', 'success');
             loadMappings(); // Refresh the list
             loadServers(); // Refresh servers to show updated mapped status
         } else {
             const result = await response.json();
-            alert(`Error: ${result.error}`);
+            showToast(`Error: ${result.error}`, 'error');
         }
     } catch (error) {
         console.error('Error removing mapping:', error);
-        alert('Error removing mapping. Please try again.');
+        showToast('Error removing mapping. Please try again.', 'error');
     }
 }
 
