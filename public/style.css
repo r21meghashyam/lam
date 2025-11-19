@@ -18,6 +18,7 @@
     --shadow-hover: rgba(0, 0, 0, 0.15);
     --btn-primary-bg: linear-gradient(45deg, #6366f1, #8b5cf6);
     --btn-danger-bg: linear-gradient(45deg, #ef4444, #f87171);
+    --btn-warning-bg: linear-gradient(45deg, #d06856, #f87171);
     --input-bg: #ffffff;
     --input-border: #d1d5db;
     --table-header-bg: #f8fafc;
@@ -133,7 +134,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -327,6 +328,12 @@ input[type="number"]:focus {
     box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
 }
 
+.btn-warning {
+    background: var(--btn-warning-bg);
+    color: white;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+}
+
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
@@ -407,6 +414,16 @@ input[type="number"]:focus {
 .status-badge.closed {
     background: var(--accent-danger);
     color: #fef2f2;
+}
+
+.status-badge.mapped {
+    background: var(--accent-primary);
+    color: #ffffff;
+}
+
+.status-badge.unmapped {
+    background: var(--text-muted);
+    color: var(--text-primary);
 }
 
 .server-actions {

@@ -18,10 +18,12 @@ flexible development environments.
   modal dialogs
 - **HTTP Proxy Mode**: Full WebSocket and HMR support for modern development
   frameworks
-- **Automatic Server Detection**: Discovers running development servers and
-  offers one-click mapping
+- **Automatic Server Detection**: Discovers unmapped development servers with
+  one-click mapping and kill options
 - **Custom Modal Dialogs**: Elegant replacement for browser prompts with
   keyboard shortcuts
+- **Process Management**: Kill server processes directly from the UI with
+  confirmation (both from mappings and unmapped servers)
 - **REST API**: Programmatic registration and management for CI/CD integration
 - **Persistent Storage**: JSON-based configuration with real-time
   synchronization
@@ -200,6 +202,20 @@ GET /api/mappings
 
 ```http
 DELETE /api/mappings/myapp.local
+```
+
+### Kill a Server Process
+
+```http
+DELETE /api/servers/:pid
+```
+
+Kills a server process by its PID. Useful for stopping development servers.
+
+**Example:**
+
+```http
+DELETE /api/servers/1234
 ```
 
 ## Manual Hosts File Management

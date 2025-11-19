@@ -103,7 +103,7 @@ const updateHostsFile = (domain, port, action = 'add') => {
 };
 
 // Scan for running local servers
-const scanLocalServers = () => {
+const scanLocalServers = (includeAll = false) => {
     return new Promise((resolve) => {
         const { exec } = require('child_process');
 
@@ -177,9 +177,10 @@ const scanLocalServers = () => {
                 }
             });
 
-            // Convert map to array, filter out self (port 80) and already mapped servers, then sort by port number
+            // Convert map to array, filter out self (port 80), then sort by port number
+            // If includeAll is true, include all servers; otherwise exclude mapped servers
             const results = Array.from(portMap.values())
-                .filter(server => server.port !== 80 && !server.mapped)
+                .filter(server => server.port !== 80 && (includeAll ? true : !server.mapped))
                 .sort((a, b) => a.port - b.port);
             resolve(results);
         });
@@ -238,11 +239,40 @@ app.delete('/api/mappings/:domain', (req, res) => {
 
 app.get('/api/servers', async (req, res) => {
     try {
-        const servers = await scanLocalServers();
+        // Check if we want all servers (including mapped ones)
+        const includeAll = req.query.all === 'true';
+        const servers = await scanLocalServers(includeAll);
         res.json({ servers });
     } catch (error) {
         console.error('Error scanning servers:', error);
         res.status(500).json({ error: 'Failed to scan local servers' });
+    }
+});
+
+app.delete('/api/servers/:pid', (req, res) => {
+    const pid = parseInt(req.params.pid);
+
+    if (!pid || isNaN(pid)) {
+        return res.status(400).json({ error: 'Invalid PID' });
+    }
+
+    try {
+        // Use process.kill to terminate the process
+        process.kill(pid, 'SIGTERM');
+
+        // Give it a moment to terminate gracefully, then force kill if needed
+        setTimeout(() => {
+            try {
+                process.kill(pid, 'SIGKILL');
+            } catch (error) {
+                // Process already terminated
+            }
+        }, 2000);
+
+        res.json({ success: true, pid });
+    } catch (error) {
+        console.error('Error killing process:', error);
+        res.status(500).json({ error: 'Failed to kill process' });
     }
 });
 

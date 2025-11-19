@@ -5,6 +5,9 @@ const serversList = document.getElementById('serversList');
 const refreshServersBtn = document.getElementById('refreshServers');
 const toastContainer = document.getElementById('toastContainer');
 
+// Global state for server statuses
+let allServersStatus = [];
+
 // Toast notification function
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
@@ -77,11 +80,20 @@ function hideUpdateBanner() {
 // Load and display mappings
 async function loadMappings() {
     try {
-        const response = await fetch('/api/mappings');
-        const data = await response.json();
+        // Load both mappings and all server statuses
+        const [mappingsResponse, serversResponse] = await Promise.all([
+            fetch('/api/mappings'),
+            fetch('/api/servers?all=true')
+        ]);
 
-        if (data.mappings && data.mappings.length > 0) {
-            displayMappings(data.mappings);
+        const mappingsData = await mappingsResponse.json();
+        const serversData = await serversResponse.json();
+
+        // Update global server status
+        allServersStatus = serversData.servers;
+
+        if (mappingsData.mappings && mappingsData.mappings.length > 0) {
+            displayMappings(mappingsData.mappings);
         } else {
             displayEmptyState();
         }
@@ -122,8 +134,12 @@ function displayMappings(mappings) {
         const title = document.createElement('h3');
         title.textContent = mapping.domain;
 
+        // Find if server is running on this port
+        const serverStatus = allServersStatus.find(s => s.port === mapping.port);
+        const isRunning = serverStatus && serverStatus.status === 'open';
+
         const details = document.createElement('p');
-        details.innerHTML = `Port: <strong>${mapping.port}</strong> | Protocol: <strong>${mapping.https ? '🔒 HTTPS' : '🌐 HTTP'}</strong>`;
+        details.innerHTML = `Port: <strong>${mapping.port}</strong> | Status: <strong>${isRunning ? '🟢 RUNNING' : '🔴 STOPPED'}</strong> | Protocol: <strong>${mapping.https ? '🔒 HTTPS' : '🌐 HTTP'}</strong>`;
 
         mappingInfo.appendChild(title);
         mappingInfo.appendChild(details);
@@ -144,6 +160,16 @@ function displayMappings(mappings) {
         deleteBtn.onclick = () => removeMapping(mapping.domain);
 
         mappingActions.appendChild(visitBtn);
+
+        // Add kill button if server is running
+        if (isRunning) {
+            const killBtn = document.createElement('button');
+            killBtn.className = 'btn btn-warning btn-small';
+            killBtn.textContent = '🔪 Kill Server';
+            killBtn.onclick = () => killServer(serverStatus.pid, serverStatus.process, serverStatus.port);
+            mappingActions.appendChild(killBtn);
+        }
+
         mappingActions.appendChild(deleteBtn);
 
         mappingItem.appendChild(mappingInfo);
@@ -175,7 +201,6 @@ function displayServers(servers) {
         <tr>
             <th>Port</th>
             <th>Process</th>
-            <th>Status</th>
             <th>URL</th>
             <th>Actions</th>
         </tr>
@@ -195,12 +220,6 @@ function displayServers(servers) {
         processCell.textContent = server.process || 'Unknown';
         processCell.title = `PID: ${server.pid}, User: ${server.user}`;
 
-        const statusCell = document.createElement('td');
-        const statusBadge = document.createElement('span');
-        statusBadge.className = `status-badge ${server.status}`;
-        statusBadge.innerHTML = server.status === 'open' ? '🟢 OPEN' : '🔴 CLOSED';
-        statusCell.appendChild(statusBadge);
-
         const urlCell = document.createElement('td');
         const urlLink = document.createElement('a');
         urlLink.href = server.url;
@@ -218,11 +237,16 @@ function displayServers(servers) {
         mapBtn.onclick = () => quickMapServer(server);
         actionsDiv.appendChild(mapBtn);
 
+        const killBtn = document.createElement('button');
+        killBtn.className = 'btn btn-danger btn-small';
+        killBtn.textContent = 'Kill';
+        killBtn.onclick = () => killServer(server.pid, server.process, server.port);
+        actionsDiv.appendChild(killBtn);
+
         actionsCell.appendChild(actionsDiv);
 
         row.appendChild(portCell);
         row.appendChild(processCell);
-        row.appendChild(statusCell);
         row.appendChild(urlCell);
         row.appendChild(actionsCell);
 
@@ -270,6 +294,33 @@ async function addMapping(project, tld, port, https) {
     } catch (error) {
         console.error('Error adding mapping:', error);
         showToast('Error adding mapping. Please try again.', 'error');
+    }
+}
+
+// Kill server process
+async function killServer(pid, process, port) {
+    const confirmed = await customConfirm(`Are you sure you want to kill the process "${process}" on port ${port}?`);
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/servers/${pid}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showToast(`Process ${process} (PID: ${pid}) killed successfully!`, 'success');
+            // Refresh both lists since server status may change
+            loadMappings();
+            loadServers();
+        } else {
+            const error = await response.json();
+            showToast(`Failed to kill process: ${error.error}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error killing process:', error);
+        showToast('Error killing process. Please try again.', 'error');
     }
 }
 
