@@ -1,21 +1,32 @@
 # 🧠 LAM - Localhost Apps Manager
 
-A fast, modern local reverse proxy that maps custom `.local` domains to
-localhost ports with built-in DNS resolution and a beautiful web dashboard.
+A fast, modern local reverse proxy that maps custom domains to localhost ports
+with built-in DNS resolution and a beautiful web dashboard.
+
+Supports **any TLD** (`.local`, `.dev`, `.test`, `.app`, `.staging`, etc.) for
+flexible development environments.
 
 ![LAM Dashboard](docs/screenshot.png)
 
 ## Features
 
-- **Instant Domain Mapping**: Map any localhost port to custom `.local` domains
-- **Built-in mDNS Server**: Zero-configuration DNS resolution for `.local`
+- **Universal Domain Mapping**: Map any localhost port to custom domains with
+  any TLD (`.local`, `.dev`, `.test`, `.app`, etc.)
+- **Built-in DNS Server**: Zero-configuration DNS resolution for all configured
   domains
-- **Modern Web Dashboard**: Beautiful interface with light/dark theme toggle
-- **HTTP Proxy Mode**: Full WebSocket and HMR support for development
-- **Automatic Server Detection**: Discovers running development servers
-- **REST API**: Programmatic registration and management
-- **Persistent Storage**: JSON-based configuration storage
-- **System Service**: Auto-start on boot with proper permissions
+- **Modern Web Dashboard**: Beautiful interface with light/dark theme toggle and
+  modal dialogs
+- **HTTP Proxy Mode**: Full WebSocket and HMR support for modern development
+  frameworks
+- **Automatic Server Detection**: Discovers running development servers and
+  offers one-click mapping
+- **Custom Modal Dialogs**: Elegant replacement for browser prompts with
+  keyboard shortcuts
+- **REST API**: Programmatic registration and management for CI/CD integration
+- **Persistent Storage**: JSON-based configuration with real-time
+  synchronization
+- **System Service**: Auto-start on boot with proper permissions for production
+  deployments
 
 ## Quick Start
 
@@ -238,12 +249,14 @@ Edit `~/.lam/config.json` to customize:
 LAM uses a **single-proxy architecture** that provides superior performance and
 compatibility:
 
-- **HTTP Proxy**: All `.local` domains are routed through a high-performance
-  HTTP proxy
+- **HTTP Proxy**: All configured domains are routed through a high-performance
+  HTTP proxy supporting any TLD
 - **WebSocket Support**: Full WebSocket proxying enables HMR (Hot Module
-  Replacement) for modern frameworks
-- **mDNS Responder**: Built-in DNS server eliminates the need for hosts file
-  modifications
+  Replacement) for modern frameworks like React, Vue, and Angular
+- **DNS Server**: Built-in mDNS responder provides zero-configuration DNS
+  resolution for all mapped domains
+- **Universal TLD Support**: Works with any top-level domain (`.local`, `.dev`,
+  `.test`, `.app`, `.staging`, `.internal`, etc.)
 - **Persistent Storage**: JSON-based configuration with real-time
   synchronization
 

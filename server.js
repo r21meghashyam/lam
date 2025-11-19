@@ -335,15 +335,16 @@ proxy.on('error', (err, req, res) => {
     }
 });
 
-// Handle proxy mode for all .local domains
+// Handle proxy mode for all configured domains
 app.use((req, res, next) => {
     const host = req.headers.host;
-    if (host && host.endsWith('.local')) {
+    if (host) {
+        // Check if this domain has a LAM mapping
         const mapping = mappings.mappings.find(m => m.domain === host);
         if (mapping) {
             // Use proxy mode with WebSocket support for all requests
             proxy.web(req, res, {
-                target: `http://127.0.0.1:${mapping.port}`
+                target: `http://${host}:${mapping.port}`
             });
             return;
         }
@@ -354,7 +355,7 @@ app.use((req, res, next) => {
 // Serve static files for the web dashboard
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Start mDNS server for faster .local domain resolution
+// Start mDNS server for domain resolution
 mdns.on('query', function(query) {
     const responses = [];
 
@@ -362,33 +363,30 @@ mdns.on('query', function(query) {
         const domain = q.name;
         const type = q.type;
 
-        console.log(`mDNS Query: ${domain} (Type: ${type})`);
+        console.log(`DNS Query: ${domain} (Type: ${type})`);
 
-        if (domain.endsWith('.local')) {
-            const mapping = mappings.mappings.find(m => m.domain === domain);
-            if (mapping) {
-                if (type === 'A') {
-                    console.log(`mDNS Resolved: ${domain} -> 127.0.0.1 (Port: ${mapping.port})`);
-                    responses.push({
-                        name: domain,
-                        type: 'A',
-                        ttl: 300,
-                        data: '127.0.0.1'
-                    });
-                } else if (type === 'AAAA') {
-                    console.log(`mDNS Resolved: ${domain} -> ::1 (Port: ${mapping.port})`);
-                    responses.push({
-                        name: domain,
-                        type: 'AAAA',
-                        ttl: 300,
-                        data: '::1'
-                    });
-                }
-            } else {
-                console.log(`mDNS Not found: ${domain}`);
+        // Check if this domain has a LAM mapping
+        const mapping = mappings.mappings.find(m => m.domain === domain);
+        if (mapping) {
+            if (type === 'A') {
+                console.log(`DNS Resolved: ${domain} -> 127.0.0.1 (Port: ${mapping.port})`);
+                responses.push({
+                    name: domain,
+                    type: 'A',
+                    ttl: 300,
+                    data: '127.0.0.1'
+                });
+            } else if (type === 'AAAA') {
+                console.log(`DNS Resolved: ${domain} -> ::1 (Port: ${mapping.port})`);
+                responses.push({
+                    name: domain,
+                    type: 'AAAA',
+                    ttl: 300,
+                    data: '::1'
+                });
             }
         } else {
-            console.log(`mDNS Ignored: ${domain} (Type: ${type}) - not .local domain`);
+            console.log(`DNS Not found: ${domain}`);
         }
     });
 
@@ -397,7 +395,7 @@ mdns.on('query', function(query) {
     }
 });
 
-console.log('mDNS server listening for .local queries');
+console.log('DNS server listening for all configured domain queries');
 
 // Start server
 const PORT = config.httpPort || 8080;
