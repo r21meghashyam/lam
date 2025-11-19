@@ -344,7 +344,7 @@ app.use((req, res, next) => {
         if (mapping) {
             // Use proxy mode with WebSocket support for all requests
             proxy.web(req, res, {
-                target: `http://${host}:${mapping.port}`
+                target: `${mapping.https ? 'https' : 'http'}://${host}:${mapping.port}`
             });
             return;
         }

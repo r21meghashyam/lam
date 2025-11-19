@@ -135,7 +135,7 @@ function displayMappings(mappings) {
         visitBtn.className = 'btn btn-primary';
         visitBtn.textContent = '🌐 Visit';
         visitBtn.onclick = () => {
-            window.open(`http://${mapping.domain}`, '_blank');
+            window.open(`${mapping.https ? 'https' : 'http'}://${mapping.domain}`, '_blank');
         };
 
         const deleteBtn = document.createElement('button');
