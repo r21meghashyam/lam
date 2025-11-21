@@ -154,12 +154,19 @@ function displayMappings(mappings) {
             window.open(`${mapping.https ? 'https' : 'http'}://${mapping.domain}`, '_blank');
         };
 
+        // Certificate management buttons
+        const certBtn = document.createElement('button');
+        certBtn.className = 'btn btn-secondary btn-small';
+        certBtn.textContent = '🔐 SSL Cert';
+        certBtn.onclick = () => manageCertificate(mapping.domain);
+
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.textContent = '🗑️ Remove';
         deleteBtn.onclick = () => removeMapping(mapping.domain);
 
         mappingActions.appendChild(visitBtn);
+        mappingActions.appendChild(certBtn);
 
         // Add kill button if server is running
         if (isRunning) {
@@ -357,6 +364,117 @@ async function quickMapServer(server) {
     } catch (error) {
         console.error('Error creating mapping:', error);
         showToast('Error creating mapping. Please try again.', 'error');
+    }
+}
+
+// Certificate management
+async function manageCertificate(domain) {
+    try {
+        // Check if certificate exists
+        const certResponse = await fetch(`/api/certificates/${domain}`);
+        const certData = await certResponse.json();
+
+        if (certData.exists) {
+            // Certificate exists, offer to regenerate or delete
+            const action = await customPrompt(
+                `Certificate exists for ${domain}. Enter 'delete' to remove it, or any other text to regenerate:`,
+                'regenerate',
+                'Type "delete" or leave as "regenerate"'
+            );
+
+            if (action === 'delete' || action === '"delete"') {
+                // Delete certificate
+                const confirmed = await customConfirm(`Delete SSL certificate for ${domain}?`);
+                if (!confirmed) return;
+
+                try {
+                    const deleteResponse = await fetch(`/api/certificates/${domain}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (deleteResponse.ok) {
+                        showToast(`Certificate deleted for ${domain}!`, 'success');
+                        loadMappings(); // Refresh to update UI
+                    } else {
+                        const error = await deleteResponse.json();
+                        showToast(`Failed to delete certificate: ${error.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting certificate:', error);
+                    showToast('Error deleting certificate.', 'error');
+                }
+            } else {
+                // Regenerate certificate (delete and create new)
+                const confirmed = await customConfirm(`Regenerate SSL certificate for ${domain}?`);
+                if (!confirmed) return;
+
+                try {
+                    const deleteResponse = await fetch(`/api/certificates/${domain}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (deleteResponse.ok) {
+                        const generateResponse = await fetch(`/api/certificates/${domain}`, {
+                            method: 'POST'
+                        });
+
+                        if (generateResponse.ok) {
+                            showToast(`Certificate regenerated for ${domain}!`, 'success');
+                            loadMappings(); // Refresh to update UI
+                        } else {
+                            const error = await generateResponse.json();
+                            showToast(`Failed to regenerate certificate: ${error.error}`, 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error regenerating certificate:', error);
+                    showToast('Error regenerating certificate.', 'error');
+                }
+            }
+        } else {
+            // Certificate doesn't exist, offer to create
+            const confirmed = await customConfirm(`Create SSL certificate for ${domain}?`);
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch(`/api/certificates/${domain}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showToast(`Certificate created for ${domain}!`, 'success');
+                    loadMappings(); // Refresh to update UI
+                } else {
+                    const error = await response.json();
+                    showToast(`Failed to create certificate: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating certificate:', error);
+                showToast('Error creating certificate.', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error checking certificate status:', error);
+        // If we can't check, try to generate
+        const confirmed = await customConfirm(`Unable to check certificate status. Create SSL certificate for ${domain}?`);
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(`/api/certificates/${domain}`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                showToast(`Certificate created for ${domain}!`, 'success');
+                loadMappings();
+            } else {
+                const error = await response.json();
+                showToast(`Failed to create certificate: ${error.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error creating certificate:', error);
+            showToast('Error creating certificate.', 'error');
+        }
     }
 }
 

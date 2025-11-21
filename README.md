@@ -29,6 +29,8 @@ flexible development environments.
   synchronization
 - **System Service**: Auto-start on boot with proper permissions for production
   deployments
+- **HTTPS/SSL Support**: Automatic certificate generation and management per
+  domain
 
 ## Quick Start
 
@@ -262,44 +264,43 @@ Edit `~/.lam/config.json` to customize:
 
 ## Architecture
 
-LAM uses a **single-proxy architecture** that provides superior performance and
-compatibility:
+LAM features a **modular, single-proxy architecture** that provides superior
+performance and maintainability:
 
-- **HTTP Proxy**: All configured domains are routed through a high-performance
-  HTTP proxy supporting any TLD
-- **WebSocket Support**: Full WebSocket proxying enables HMR (Hot Module
-  Replacement) for modern frameworks like React, Vue, and Angular
-- **DNS Server**: Built-in mDNS responder provides zero-configuration DNS
-  resolution for all mapped domains
-- **Universal TLD Support**: Works with any top-level domain (`.local`, `.dev`,
-  `.test`, `.app`, `.staging`, `.internal`, etc.)
-- **Persistent Storage**: JSON-based configuration with real-time
+### Core Components
+
+- **HTTP Proxy**: High-performance HTTP proxy supporting any TLD with full
+  WebSocket proxying for HMR
+- **DNS Server**: Built-in mDNS responder providing zero-configuration DNS
+  resolution
+- **Certificate Manager**: Automatic SSL certificate generation and management
+  per domain
+- **Server Scanner**: Local development server discovery and process management
+- **Mappings Manager**: JSON-based configuration storage with real-time
   synchronization
+- **HTTPS Proxy**: SSL/TLS proxy server with SNI support for secure connections
 
 ### Project Structure
 
 ```
 lam/
-├── server.js                 # Main proxy server with mDNS & REST API
+├── server.js                 # Modular entry point coordinating all services
+├── src/
+│   ├── config.js             # Configuration management singleton
+│   ├── dns-server.js         # mDNS responder for domain resolution
+│   ├── http-server.js        # HTTP proxy with WebSocket support
+│   ├── https-server.js       # HTTPS proxy with SNI certificate handling
+│   ├── certificate-manager.js # SSL certificate generation & management
+│   ├── mappings-manager.js   # Domain-mapping storage & API
+│   └── server-scanner.js     # Local server discovery & process management
 ├── package.json
 ├── bin/
 │   └── lam.js                # CLI installer (npx lam-cli)
 ├── storage/
 │   └── mappings.json         # Domain-port mappings storage
-├── certs/                    # SSL certificates (future)
-├── scripts/
-│   ├── start-lam.sh          # Development startup script
-│   ├── install-service.sh    # System service installation
-│   ├── uninstall-service.sh  # Service removal script
-│   ├── lam.service           # Linux systemd service file
-│   ├── com.lam.plist         # macOS launchd service file
-│   └── update-hosts.js       # Manual hosts file management
-├── public/
-│   ├── index.html            # Modern web dashboard with themes
-│   ├── style.css             # Responsive CSS with dark/light themes
-│   └── script.js             # Dashboard interactivity
-└── docs/
-    └── screenshot.png        # Dashboard screenshot
+├── certs/                    # SSL certificates storage
+├── scripts/                  # Service management scripts
+└── public/                   # Web dashboard assets
 ```
 
 ## Next.js Integration
@@ -326,9 +327,77 @@ The plugin automatically:
 - Enables proxy mode for HMR support
 - Configures allowed origins for hot reloading
 
-## HTTPS Support (Future)
+## HTTPS/SSL Support
 
-HTTPS support is planned for future releases using local CA certificates.
+LAM provides automatic SSL certificate generation for secure HTTPS connections.
+Each domain gets its own self-signed certificate, compatible with modern
+browsers.
+
+### Features
+
+- **Automatic Certificate Generation**: SSL certificates are generated on-demand
+  for each domain
+- **Per-Domain Certificates**: Each mapping gets its own unique certificate
+- **Modern Encryption**: 2048-bit RSA keys with SHA-256 signing
+- **Browser Compatible**: Works with all modern browsers (may show security
+  warnings for self-signed certs)
+- **Wildcard Support**: Automatically includes wildcard subjects for subdomains
+
+### HTTPS Configuration
+
+HTTPS is enabled by default. Access your apps securely:
+
+1. **Create a mapping** (HTTPS is selected by default)
+2. **LAM generates a certificate** automatically
+3. **Access securely** at `https://yourdomain.local`
+
+### Manual Certificate Management
+
+Use the web interface or API to manage certificates:
+
+```bash
+# Generate certificate
+curl -X POST https://localhost:443/api/certificates/myapp.local
+
+# Check certificate status
+curl https://localhost:443/api/certificates/myapp.local
+
+# Delete certificate
+curl -X DELETE https://localhost:443/api/certificates/myapp.local
+```
+
+### Certificate Locations
+
+Certificates are stored in `~/.lam/certs/`:
+
+```
+~/.lam/certs/
+├── myapp.local/
+│   ├── key.pem      # Private key
+│   └── cert.pem     # Certificate
+└── api.dev/
+    ├── key.pem
+    └── cert.pem
+```
+
+### Security Notes
+
+- **Self-signed certificates** show browser warnings (expected behavior)
+- **Development only** - not suitable for production
+- **Automatic renewal** every 365 days included
+- **Secure storage** with proper file permissions
+
+### Https Configuration
+
+Edit `~/.lam/config.json`:
+
+```json
+{
+  "enableHttps": true,
+  "httpsPort": 443,
+  "certsPath": "~/.lam/certs"
+}
+```
 
 ## Troubleshooting
 
