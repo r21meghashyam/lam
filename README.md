@@ -1,5 +1,9 @@
 # 🧠 LAM - Localhost Apps Manager
 
+[![NPM Downloads](https://img.shields.io/npm/d18m/lam-cli)](#https://www.npmjs.com/package/lam-cli)
+[![Latest Version](https://img.shields.io/npm/v/lam-cli)](#https://www.npmjs.com/package/lam-cli)
+[![Latest Version](https://img.shields.io/npm/l/lam-cli)](#https://www.npmjs.com/package/lam-cli)
+
 A fast, modern local reverse proxy that maps custom domains to localhost ports
 with built-in DNS resolution and a beautiful web dashboard.
 

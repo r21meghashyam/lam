@@ -57,7 +57,7 @@ async function checkForUpdates() {
         const latestVer = latest.version.split('.').map(Number);
 
         const isNewer = latestVer.some((part, i) => part > (currentVer[i] || 0)) ||
-                       latestVer.length > currentVer.length;
+            latestVer.length > currentVer.length;
 
         if (isNewer) {
             showUpdateBanner(latest.version);
@@ -121,6 +121,39 @@ async function loadServers() {
     }
 }
 
+async function getFaviconUrl(domain, imgElement) {
+    try {
+        const response = await fetch(domain);
+        if (response.ok) {
+            const parser = new DOMParser();
+            const text = await response.text();
+            const doc = parser.parseFromString(text, 'text/html');
+            const iconLink = doc.querySelector('link[rel="icon"], link[rel="shortcut icon"]');
+            if (iconLink) {
+                let iconUrl = iconLink.getAttribute('href');
+                // Handle relative URLs
+                if (iconUrl && !iconUrl.startsWith('http')) {
+                    const url = new URL(domain);
+                    iconUrl = url.origin + (iconUrl.startsWith('/') ? iconUrl : '/' + iconUrl);
+                }
+                imgElement.src = iconUrl;
+            }
+            else {
+                imgElement.src = `${domain}/favicon.ico`; // Fallback to local favicon
+            }
+
+        }
+        else {
+            imgElement.src = `${domain}/favicon.ico`; // Fallback to local favicon
+        }
+        imgElement.style.display = 'inline';
+    } catch (error) {
+        imgElement.src = `${domain}/favicon.ico`;
+        imgElement.style.display = 'inline';
+    }
+}
+
+
 function displayMappings(mappings) {
     mappingsList.innerHTML = '';
 
@@ -132,7 +165,15 @@ function displayMappings(mappings) {
         mappingInfo.className = 'mapping-info';
 
         const title = document.createElement('h3');
-        title.textContent = mapping.domain;
+        const img = document.createElement('img');
+        const domainUrl = `${mapping.https ? 'https' : 'http'}://${mapping.domain}`;
+        img.classList.add('favicon');
+        img.onerror = () => {
+            img.style.display = 'none';
+        };
+        getFaviconUrl(domainUrl, img);
+        title.appendChild(img);
+        title.appendChild(document.createTextNode(mapping.domain));
 
         // Find if server is running on this port
         const serverStatus = allServersStatus.find(s => s.port === mapping.port);
@@ -224,7 +265,14 @@ function displayServers(servers) {
         portCell.textContent = server.port;
 
         const processCell = document.createElement('td');
-        processCell.textContent = server.process || 'Unknown';
+        const img = document.createElement('img');
+        img.classList.add('favicon');
+        img.onerror = () => {
+            img.style.display = 'none';
+        };
+        getFaviconUrl(server.url, img);
+        processCell.appendChild(img);
+        processCell.appendChild(document.createTextNode(server.process || 'Unknown'));
         processCell.title = `PID: ${server.pid}, User: ${server.user}`;
 
         const urlCell = document.createElement('td');
@@ -331,9 +379,9 @@ async function killServer(pid, process, port) {
     }
 }
 
- // Quick map server
+// Quick map server
 async function quickMapServer(server) {
-    const project = await customPrompt(`Enter a project name for port ${server.port}:`, `${server.process||`app-`+server.port}`, `e.g., myproject, api, frontend`);
+    const project = await customPrompt(`Enter a project name for port ${server.port}:`, `${server.process || `app-` + server.port}`, `e.g., myproject, api, frontend`);
     if (!project || !project.trim()) {
         return;
     }
