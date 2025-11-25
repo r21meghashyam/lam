@@ -10,7 +10,7 @@ with built-in DNS resolution and a beautiful web dashboard.
 Supports **any TLD** (`.local`, `.dev`, `.test`, `.app`, `.staging`, etc.) for
 flexible development environments.
 
-![LAM Dashboard](docs/screenshot.png)
+![LAM Dashboard](https://raw.githubusercontent.com/r21meghashyam/lam/refs/heads/main/docs/screenshot.png)
 
 ## Features
 
