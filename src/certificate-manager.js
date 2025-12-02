@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const tls = require('tls');
 const selfsigned = require('selfsigned');
 
 class CertificateManager {
@@ -113,10 +114,10 @@ class CertificateManager {
                 certPath = cert.certPath;
             }
 
-            return {
+            return tls.createSecureContext({
                 key: fs.readFileSync(keyPath),
                 cert: fs.readFileSync(certPath)
-            };
+            });
         } catch (error) {
             console.error(`Failed to load certificate for ${domain}:`, error);
             return null;

@@ -34,11 +34,11 @@ class HTTPSServer {
                 }
             }
         });
-        server.on("keylog", (a) => { console.log("keylog", a); })
-        server.on("newSession", (a) => { console.log("newSession", a); })
-        server.on("OCSPRequest", (a) => { console.log("OCSPRequest", a); })
+        // server.on("keylog", (a) => { console.log("keylog", a); })
+        // server.on("newSession", (a) => { console.log("newSession", a); })
+        // server.on("OCSPRequest", (a) => { console.log("OCSPRequest", a); })
         // server.on("resumeSession", (a) => { console.log("resumeSession", a); })
-        server.on("secureConnection", (a) => { console.log("secureConnection", a); })
+        // server.on("secureConnection", (a) => { console.log("secureConnection", a); })
         server.on("tlsClientError", (a) => { console.log("tlsClientError", a); })
         server.on("close", (a) => { console.log("close", a); })
         // server.on("connection", (a) => { console.log("connection", a); })
@@ -48,7 +48,7 @@ class HTTPSServer {
         server.on("checkExpectation", (a) => { console.log("checkExpectation", a); })
         server.on("clientError", (a) => { console.log("clientError", a); })
         server.on("connect", (a) => { console.log("connect", a); })
-        server.on("request", (a) => { console.log("request", a); })
+        // server.on("request", (a) => { console.log("request", a); })
         server.on("upgrade", (a) => { console.log("upgrade", a); })
 
         // Handle HTTPS requests
@@ -94,7 +94,8 @@ class HTTPSServer {
                 const mapping = mappings.mappings.find(m => m.domain === host);
 
                 if (['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNRESET', 'EHOSTUNREACH'].includes(err.code)) {
-                    res.status(502).send(this.getErrorHTML('Server Not Reachable', `
+                    res.writeHead(502, { 'Content-Type': 'text/html' });
+                    res.end(this.getErrorHTML('Server Not Reachable', `
                         The domain <strong class="domain">${host}</strong> is configured in LAM but the target server is not running.
                         <br><br>
                         <strong class="port">Target: localhost:${mapping ? mapping.port : 'unknown'}</strong>
@@ -102,7 +103,8 @@ class HTTPSServer {
                     `));
                 } else {
                     console.error('HTTPS Proxy error:', err.message);
-                    res.status(500).send(this.getErrorHTML('Proxy Error', `
+                    res.writeHead(500, { 'Content-Type': 'text/html' });
+                    res.end(this.getErrorHTML('Proxy Error', `
                         An error occurred while connecting to <strong class="domain">${host}</strong>.
                         <br><br>Please check your LAM configuration and try again.
                     `));
