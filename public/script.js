@@ -180,7 +180,7 @@ function displayMappings(mappings) {
         const isRunning = serverStatus && serverStatus.status === 'open';
 
         const details = document.createElement('p');
-        details.innerHTML = `Port: <strong>${mapping.port}</strong> | Status: <strong>${isRunning ? '🟢 RUNNING' : '🔴 STOPPED'}</strong> | Protocol: <strong>${mapping.https ? '🔒 HTTPS' : '🌐 HTTP'}</strong>`;
+        details.innerHTML = `Port: <strong>${mapping.port}</strong> | Status: <strong>${isRunning ? '🟢 RUNNING' : '🔴 STOPPED'}</strong>`;
 
         mappingInfo.appendChild(title);
         mappingInfo.appendChild(details);
@@ -190,16 +190,16 @@ function displayMappings(mappings) {
 
         const visitBtn = document.createElement('button');
         visitBtn.className = 'btn btn-primary';
-        visitBtn.textContent = '🌐 Visit';
+        visitBtn.textContent = '🔓 Visit HTTP';
         visitBtn.onclick = () => {
             window.open(`${mapping.https ? 'https' : 'http'}://${mapping.domain}`, '_blank');
         };
 
-        // Certificate management buttons
-        const certBtn = document.createElement('button');
-        certBtn.className = 'btn btn-secondary btn-small';
-        certBtn.textContent = '🔐 SSL Cert';
-        certBtn.onclick = () => manageCertificate(mapping.domain);
+        // Visit HTTPS button
+        const visitHttpsBtn = document.createElement('button');
+        visitHttpsBtn.className = 'btn btn-secondary btn-small';
+        visitHttpsBtn.textContent = '🔐 Visit HTTPS';
+        visitHttpsBtn.onclick = () => window.open(`https://${mapping.domain}`, '_blank');
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
@@ -207,7 +207,7 @@ function displayMappings(mappings) {
         deleteBtn.onclick = () => removeMapping(mapping.domain);
 
         mappingActions.appendChild(visitBtn);
-        mappingActions.appendChild(certBtn);
+        mappingActions.appendChild(visitHttpsBtn);
 
         // Add kill button if server is running
         if (isRunning) {
