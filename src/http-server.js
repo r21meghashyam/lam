@@ -86,6 +86,40 @@ class HTTPServer {
             res.json({ version: pkg.version });
         });
 
+        this.app.get('/api/ca', (req, res) => {
+            // Import certificate manager here since it's not directly available
+            const CertificateManager = require('./certificate-manager');
+            const forge = require('node-forge');
+            const mappingsManager = this.mappingsManager; // Use the instance
+            try {
+                const certManager = new CertificateManager(this.config, mappingsManager);
+                const ca = certManager.getCA();
+                const format = req.query.format;
+
+                if (format === 'der') {
+                    // Convert PEM to DER
+                    const certForge = forge.pki.certificateFromPem(ca.certPem);
+                    const der = forge.asn1.toDer(forge.pki.certificateToAsn1(certForge)).getBytes();
+
+                    res.set({
+                        'Content-Type': 'application/pkix-cert',
+                        'Content-Disposition': 'attachment; filename="lam-ca-cert.cer"'
+                    });
+                    res.send(Buffer.from(der, 'binary'));
+                } else {
+                    // Default PEM format
+                    res.set({
+                        'Content-Type': 'application/x-pem-file',
+                        'Content-Disposition': 'attachment; filename="lam-ca-cert.pem"'
+                    });
+                    res.send(ca.certPem);
+                }
+            } catch (error) {
+                console.error('Failed to get CA certificate:', error);
+                res.status(500).json({ error: 'Failed to get CA certificate' });
+            }
+        });
+
         // Serve static files for the web dashboard
         this.app.use(express.static(path.join(__dirname, '../public')));
     }

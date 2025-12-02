@@ -384,14 +384,79 @@ Certificates are stored in `~/.lam/certs/`:
     └── cert.pem
 ```
 
+### Local CA and Trusted Certificates
+
+LAM uses a local Certificate Authority (CA) to sign SSL certificates, allowing
+browsers to trust HTTPS connections without security warnings.
+
+#### Download the CA Certificate
+
+```bash
+# Download CA certificate over HTTP (recommended for initial setup)
+curl -o lam-ca-cert.pem http://localhost/api/ca
+
+# For macOS users (DER format):
+curl -o lam-ca-cert.cer "http://localhost/api/ca?format=der"
+
+# Or over HTTPS (requires accepting self-signed cert first)
+curl -k -o lam-ca-cert.pem https://localhost/api/ca
+
+# Or manually from the dashboard: http://localhost/trust
+```
+
+#### Install CA Certificate
+
+**macOS:**
+
+```bash
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain lam-ca-cert.pem
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+sudo cp lam-ca-cert.pem /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+```
+
+**Windows (PowerShell as Administrator):**
+
+```powershell
+certutil -addstore "Root" lam-ca-cert.pem
+```
+
+**Chrome/Edge:**
+
+1. Open Settings → Privacy and security → Manage certificates
+2. Import `lam-ca-cert.pem` to Trusted Root Certification Authorities
+
+#### Verification
+
+After installation:
+
+- `https://yourdomain.local` loads without warnings
+- Certificate shows as "Valid" in browser inspector
+- All LAM certificates are signed by "LAM Local Development CA"
+
 ### Security Notes
 
-- **Self-signed certificates** show browser warnings (expected behavior)
+- **Trusted certificates** - no browser warnings for LAM domains
 - **Development only** - not suitable for production
-- **Automatic renewal** every 365 days included
+- **Automatic renewal** every 365 days for certificates, 10 years for CA
 - **Secure storage** with proper file permissions
 
-### Https Configuration
+### Trust Certificate Instructions
+
+If you encounter "SSL certificate unknown" errors, LAM provides trust
+installation guide at `http://localhost/trust`.
+
+This page includes:
+
+- Direct CA certificate download link
+- Installation instructions for macOS, Windows, and Linux
+- Step-by-step guidance for importing into system trust store
+
+### HTTPS Configuration
 
 Edit `~/.lam/config.json`:
 
@@ -399,6 +464,7 @@ Edit `~/.lam/config.json`:
 {
   "enableHttps": true,
   "httpsPort": 443,
+  "certsPath": "~/.lam/certs",
   "certsPath": "~/.lam/certs"
 }
 ```
@@ -423,5 +489,3 @@ If port 80 is busy, change the `httpPort` in `config.json`.
 This is a development tool. Feel free to submit issues and pull requests.
 
 ## License
-
-MIT

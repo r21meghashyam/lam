@@ -20,6 +20,20 @@ class MappingsManager {
             } else {
                 this.mappings = { mappings: [] };
             }
+
+            // Migration: Force HTTPS for all mappings if enableHttps is true
+            if (this.config.enableHttps && this.mappings.mappings) {
+                let updated = false;
+                this.mappings.mappings.forEach(mapping => {
+                    if (!mapping.https) {
+                        mapping.https = true;
+                        updated = true;
+                    }
+                });
+                if (updated) {
+                    this.saveMappings();
+                }
+            }
         } catch (error) {
             console.error('Error loading mappings:', error);
         }
@@ -39,6 +53,11 @@ class MappingsManager {
 
     createMapping(project, port, https = false, tld = 'local', certKeyPath = null, certCertPath = null) {
         const domain = `${project}.${tld}`;
+
+        // If HTTPS is globally enabled, force HTTPS for this mapping
+        if (this.config.enableHttps) {
+            https = true;
+        }
 
         // If custom cert paths not provided, generate certificate for the domain
         if (!certKeyPath || !certCertPath) {

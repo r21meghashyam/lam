@@ -120,6 +120,12 @@ class HTTPSServer {
             return;
         }
 
+        // Handle trust instructions page
+        if (req.url === '/trust') {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            return res.end(this.getTrustInstructionsHTML());
+        }
+
         // Serve static files for dashboard
         const staticPath = path.join(__dirname, '../public');
         const filePath = req.url === '/' ? path.join(staticPath, 'index.html') : path.join(staticPath, req.url);
@@ -208,6 +214,36 @@ class HTTPSServer {
             }
         }
 
+        if (req.method === 'GET' && req.url === '/api/ca') {
+            try {
+                const ca = this.certificateManager.getCA();
+                const format = req.url.includes('format=der') ? 'der' : 'pem';
+
+                if (format === 'der') {
+                    // Convert PEM to DER
+                    const forge = require('node-forge');
+                    const certForge = forge.pki.certificateFromPem(ca.certPem);
+                    const der = forge.asn1.toDer(forge.pki.certificateToAsn1(certForge)).getBytes();
+
+                    res.writeHead(200, {
+                        'Content-Type': 'application/pkix-cert',
+                        'Content-Disposition': 'attachment; filename="lam-ca-cert.cer"'
+                    });
+                    return res.end(Buffer.from(der, 'binary'));
+                } else {
+                    // Default PEM format
+                    res.writeHead(200, {
+                        'Content-Type': 'application/x-pem-file',
+                        'Content-Disposition': 'attachment; filename="lam-ca-cert.pem"'
+                    });
+                    return res.end(ca.certPem);
+                }
+            } catch (error) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ error: 'Failed to get CA certificate' }));
+            }
+        }
+
         res.writeHead(405);
         res.end('Method not allowed');
     }
@@ -238,6 +274,71 @@ class HTTPSServer {
                     <h1>${title}</h1>
                     <p>${content}</p>
                     <a href="https://localhost" class="btn">Go to LAM Dashboard</a>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    getTrustInstructionsHTML() {
+        return `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>LAM - SSL Certificate Issue</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+                    .container { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 2rem; max-width: 600px; margin: 0 auto; }
+                    .logo { text-align: center; margin-bottom: 2rem; }
+                    h1 { color: #333; margin-bottom: 1rem; text-align: center; }
+                    p { color: #666; margin-bottom: 1rem; line-height: 1.6; }
+                    .btn { display: inline-block; background: #28a745; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 4px; margin: 0.5rem; border: none; cursor: pointer; }
+                    .btn:hover { background: #218838; }
+                    .btn.secondary { background: #6c757d; }
+                    .btn.secondary:hover { background: #545b62; }
+                    .step { background: #f8f9fa; border-left: 4px solid #007bff; padding: 1rem; margin: 1rem 0; border-radius: 4px; }
+                    .step h3 { margin-top: 0; color: #007bff; }
+                    code { background: #f1f3f4; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="logo">
+                        <img src="https://localhost/app-icon.png" alt="LAM" style="width: 64px; height: 64px;">
+                    </div>
+                    <h1>SSL Certificate Not Trusted</h1>
+                    <p>LAM uses a local Certificate Authority to provide trusted HTTPS certificates for local development. You need to install the LAM CA certificate to trust all LAM-generated certificates.</p>
+
+                    <div class="step">
+                        <h3>Download the CA Certificate</h3>
+                        <p>Click the button below to download the LAM Certificate Authority certificate.</p>
+                        <a href="/api/ca" download="lam-ca-cert.pem" class="btn">Download LAM CA Certificate</a>
+                    </div>
+
+                    <div class="step">
+                        <h3>Install on macOS</h3>
+                        <p>Double-click the downloaded <code>lam-ca-cert.pem</code> file and add it to your System keychain as "Always Trust".</p>
+                    </div>
+
+                    <div class="step">
+                        <h3>Install on Windows</h3>
+                        <p>Right-click the downloaded <code>lam-ca-cert.pem</code> file and select "Install Certificate". Choose "Local Machine" and place it in the "Trusted Root Certification Authorities" store.</p>
+                    </div>
+
+                    <div class="step">
+                        <h3>Install on Linux</h3>
+                        <p>Copy the certificate to the system trust store:</p>
+                        <pre><code>sudo cp lam-ca-cert.pem /usr/local/share/ca-certificates/
+sudo update-ca-certificates</code></pre>
+                    </div>
+
+                    <p>After installing the certificate, refresh this page. All LAM domains will now load securely without warnings.</p>
+
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <a href="https://localhost" class="btn secondary">Back to LAM Dashboard</a>
+                    </div>
                 </div>
             </body>
             </html>
