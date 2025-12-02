@@ -16,7 +16,7 @@ class HTTPSServer {
         });
 
         // Only create HTTPS server if enabled
-        this.httpsServer = config.enableHttps ? this.createHTTPSServer() : null;
+        this.httpsServer = this.createHTTPSServer();
     }
 
     createHTTPSServer() {
@@ -34,6 +34,22 @@ class HTTPSServer {
                 }
             }
         });
+        server.on("keylog", (a) => { console.log("keylog", a); })
+        server.on("newSession", (a) => { console.log("newSession", a); })
+        server.on("OCSPRequest", (a) => { console.log("OCSPRequest", a); })
+        // server.on("resumeSession", (a) => { console.log("resumeSession", a); })
+        server.on("secureConnection", (a) => { console.log("secureConnection", a); })
+        server.on("tlsClientError", (a) => { console.log("tlsClientError", a); })
+        server.on("close", (a) => { console.log("close", a); })
+        // server.on("connection", (a) => { console.log("connection", a); })
+        server.on("error", (a) => { console.log("error", a); })
+        server.on("listening", (a) => { console.log("listening", a); })
+        server.on("checkContinue", (a) => { console.log("checkContinue", a); })
+        server.on("checkExpectation", (a) => { console.log("checkExpectation", a); })
+        server.on("clientError", (a) => { console.log("clientError", a); })
+        server.on("connect", (a) => { console.log("connect", a); })
+        server.on("request", (a) => { console.log("request", a); })
+        server.on("upgrade", (a) => { console.log("upgrade", a); })
 
         // Handle HTTPS requests
         this.setupRequestHandler(server);
@@ -42,8 +58,10 @@ class HTTPSServer {
     }
 
     setupRequestHandler(server) {
+
         server.on('request', (req, res) => {
             const host = req.headers.host;
+            console.log({ host })
             if (host) {
                 const mappings = this.mappingsManager.getMappings();
                 const mapping = mappings.mappings.find(m => m.domain === host);
@@ -225,7 +243,9 @@ class HTTPSServer {
     }
 
     start(port) {
+        console.log({ port })
         if (this.httpsServer) {
+            console.log(11);
             this.httpsServer.listen(port, () => {
                 console.log(`LAM HTTPS server listening on port ${port}`);
                 console.log(`Secure dashboard: https://localhost:${port}`);

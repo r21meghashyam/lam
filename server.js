@@ -30,12 +30,6 @@ const httpServer = new HTTPServer(config, mappingsManager, serverScanner);
 httpServer.start(config.httpPort);
 
 // Initialize HTTPS server (if enabled)
-const certificateManager = new CertificateManager(config);
+const certificateManager = new CertificateManager(config, mappingsManager);
 const httpsServer = new HTTPSServer(config, certificateManager, mappingsManager);
-if (httpsServer.isEnabled()) {
-    httpsServer.start(config.httpsPort);
-}
-
-if (config.enableHttps) {
-    console.log('HTTPS support enabled with automatic certificate generation');
-}
+httpsServer.start(config.httpsPort);

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const CertificateManager = require('./certificate-manager');
 
 class MappingsManager {
     constructor(config) {
@@ -36,15 +37,26 @@ class MappingsManager {
         return this.mappings;
     }
 
-    createMapping(project, port, https = false, tld = 'local') {
+    createMapping(project, port, https = false, tld = 'local', certKeyPath = null, certCertPath = null) {
         const domain = `${project}.${tld}`;
+
+        // If custom cert paths not provided, generate certificate for the domain
+        if (!certKeyPath || !certCertPath) {
+            const certManager = new CertificateManager(this.config, this);
+            try {
+                certManager.getCertificateForDomain(domain);
+                console.log(`Certificate ready for ${domain}`);
+            } catch (error) {
+                console.error(`Error generating certificate for ${domain}:`, error);
+            }
+        }
 
         // Check if mapping already exists
         const existingIndex = this.mappings.mappings.findIndex(m => m.domain === domain);
         if (existingIndex >= 0) {
-            this.mappings.mappings[existingIndex] = { domain, port, https, proxy: true };
+            this.mappings.mappings[existingIndex] = { domain, port, https, proxy: true, certKeyPath, certCertPath };
         } else {
-            this.mappings.mappings.push({ domain, port, https, proxy: true });
+            this.mappings.mappings.push({ domain, port, https, proxy: true, certKeyPath, certCertPath });
         }
 
         this.saveMappings();

@@ -3,8 +3,9 @@ const path = require('path');
 const selfsigned = require('selfsigned');
 
 class CertificateManager {
-    constructor(config) {
+    constructor(config, mappingsManager) {
         this.config = config;
+        this.mappingsManager = mappingsManager;
     }
 
     generateCertificateForDomain(domain) {
@@ -97,10 +98,24 @@ class CertificateManager {
 
     createSecureContext(domain) {
         try {
-            const cert = this.getCertificateForDomain(domain);
+            // Check if mapping has custom certificate paths
+            const mappings = this.mappingsManager.getMappings();
+            const mapping = mappings.mappings.find(m => m.domain === domain);
+
+            let keyPath, certPath;
+            if (mapping && mapping.certKeyPath && mapping.certCertPath) {
+                keyPath = mapping.certKeyPath;
+                certPath = mapping.certCertPath;
+                console.log(`Using custom certificate for ${domain}: ${keyPath}, ${certPath}`);
+            } else {
+                const cert = this.getCertificateForDomain(domain);
+                keyPath = cert.keyPath;
+                certPath = cert.certPath;
+            }
+
             return {
-                key: fs.readFileSync(cert.keyPath),
-                cert: fs.readFileSync(cert.certPath)
+                key: fs.readFileSync(keyPath),
+                cert: fs.readFileSync(certPath)
             };
         } catch (error) {
             console.error(`Failed to load certificate for ${domain}:`, error);
