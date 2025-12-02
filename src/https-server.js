@@ -8,6 +8,7 @@ class HTTPSServer {
         this.config = config;
         this.certificateManager = certificateManager;
         this.mappingsManager = mappingsManager;
+        this.serverScanner = new (require('./server-scanner'))();
         this.httpsProxy = httpProxy.createProxyServer({
             changeOrigin: true,
             ws: true,
@@ -34,23 +35,6 @@ class HTTPSServer {
                 }
             }
         });
-        // server.on("keylog", (a) => { console.log("keylog", a); })
-        // server.on("newSession", (a) => { console.log("newSession", a); })
-        // server.on("OCSPRequest", (a) => { console.log("OCSPRequest", a); })
-        // server.on("resumeSession", (a) => { console.log("resumeSession", a); })
-        // server.on("secureConnection", (a) => { console.log("secureConnection", a); })
-        server.on("tlsClientError", (a) => { console.log("tlsClientError", a); })
-        server.on("close", (a) => { console.log("close", a); })
-        // server.on("connection", (a) => { console.log("connection", a); })
-        server.on("error", (a) => { console.log("error", a); })
-        server.on("listening", (a) => { console.log("listening", a); })
-        server.on("checkContinue", (a) => { console.log("checkContinue", a); })
-        server.on("checkExpectation", (a) => { console.log("checkExpectation", a); })
-        server.on("clientError", (a) => { console.log("clientError", a); })
-        server.on("connect", (a) => { console.log("connect", a); })
-        // server.on("request", (a) => { console.log("request", a); })
-        server.on("upgrade", (a) => { console.log("upgrade", a); })
-
         // Handle HTTPS requests
         this.setupRequestHandler(server);
 
@@ -61,7 +45,6 @@ class HTTPSServer {
 
         server.on('request', (req, res) => {
             const host = req.headers.host;
-            console.log({ host })
             if (host) {
                 const mappings = this.mappingsManager.getMappings();
                 const mapping = mappings.mappings.find(m => m.domain === host);
@@ -169,6 +152,58 @@ class HTTPSServer {
         const mappings = this.mappingsManager.getMappings();
 
         // Handle different API endpoints
+        if (req.method === 'POST' && req.url === '/api/register') {
+            let body = '';
+            req.on('data', chunk => body += chunk);
+            req.on('end', async () => {
+                try {
+                    const { project, port, https = false, tld = 'local' } = JSON.parse(body);
+                    if (!project || !port) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        return res.end(JSON.stringify({ error: 'Project name and port are required' }));
+                    }
+                    const result = this.mappingsManager.createMapping(project, port, https, tld);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify(result));
+                } catch (error) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({ error: 'Invalid JSON' }));
+                }
+            });
+            return;
+        }
+
+        if (req.method === 'DELETE' && req.url.startsWith('/api/mappings/')) {
+            const domain = req.url.split('/api/mappings/')[1];
+            const result = this.mappingsManager.removeMapping(domain);
+            if (result.success) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify(result));
+            } else {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify(result));
+            }
+        }
+
+        if (req.method === 'DELETE' && req.url.startsWith('/api/servers/')) {
+            const pid = parseInt(req.url.split('/api/servers/')[1]);
+            if (!pid || isNaN(pid)) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ error: 'Invalid PID' }));
+            }
+            try {
+                // Import server-scanner dynamically
+                const ServerScanner = require('./server-scanner');
+                await ServerScanner.prototype.killProcess.call(null, pid);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ success: true, pid }));
+            } catch (error) {
+                console.error('Error killing process:', error);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                return res.end(JSON.stringify({ error: 'Failed to kill process' }));
+            }
+        }
+
         if (req.method === 'GET' && req.url === '/api/mappings') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify(mappings));
@@ -181,10 +216,9 @@ class HTTPSServer {
         }
 
         if (req.method === 'GET' && req.url.startsWith('/api/servers')) {
-            const serverScanner = require('./server-scanner');
             try {
                 const includeAll = req.url.includes('all=true');
-                const servers = await serverScanner.scanLocalServers(includeAll);
+                const servers = await this.serverScanner.scanLocalServers(includeAll);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 return res.end(JSON.stringify({ servers }));
             } catch (error) {
@@ -346,9 +380,7 @@ sudo update-ca-certificates</code></pre>
     }
 
     start(port) {
-        console.log({ port })
         if (this.httpsServer) {
-            console.log(11);
             this.httpsServer.listen(port, () => {
                 console.log(`LAM HTTPS server listening on port ${port}`);
                 console.log(`Secure dashboard: https://localhost:${port}`);
